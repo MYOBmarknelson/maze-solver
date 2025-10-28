@@ -206,6 +206,31 @@ export class Maze {
     return this.config;
   }
 
+  public shiftWall(from: Position, to: Position): void {
+    const fromCell = this.getCell(from);
+    const toCell = this.getCell(to);
+
+    if (!fromCell || !toCell) return;
+
+    // Copy wall states from 'from' to 'to'
+    const directions: (keyof typeof fromCell.walls)[] = [
+      "north",
+      "south",
+      "east",
+      "west",
+    ];
+    if (this.config.dimensions === "3d") {
+      directions.push("up", "down");
+    }
+
+    for (const direction of directions) {
+      const hasWall = fromCell.walls[direction];
+      if (hasWall !== undefined) {
+        this.setWall(to, direction, hasWall);
+      }
+    }
+  }
+
   public reset(): void {
     this.initializeCells();
   }

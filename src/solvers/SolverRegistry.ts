@@ -3,8 +3,24 @@ import { RandomWalkSolver } from "./RandomWalkSolver";
 import { AStarSolver } from "./AStarSolver";
 import { DFSSolver } from "./DFSSolver";
 import { BFSSolver } from "./BFSSolver";
+import { LeftHandRuleSolver } from "./LeftHandRuleSolver";
+import { RightHandRuleSolver } from "./RightHandRuleSolver";
+import { SlimeMoldSolver } from "./SlimeMoldSolver";
+import { DijkstraSolver } from "./DijkstraSolver";
+import { GreedyBestFirstSolver } from "./GreedyBestFirstSolver";
+import { BidirectionalSearchSolver } from "./BidirectionalSearchSolver";
 
-export type SolverType = "random-walk" | "astar" | "dfs" | "bfs";
+export type SolverType =
+  | "random-walk"
+  | "astar"
+  | "dfs"
+  | "bfs"
+  | "left-hand"
+  | "right-hand"
+  | "slime-mold"
+  | "dijkstra"
+  | "greedy-best-first"
+  | "bidirectional";
 
 export interface SolverInfo {
   type: SolverType;
@@ -60,6 +76,72 @@ export class SolverRegistry {
         complete: true,
       },
     ],
+    [
+      "left-hand",
+      {
+        type: "left-hand",
+        name: "Left-Hand Rule",
+        description:
+          "Always follows the left wall. Guaranteed to solve simply-connected mazes.",
+        optimal: false,
+        complete: true,
+      },
+    ],
+    [
+      "right-hand",
+      {
+        type: "right-hand",
+        name: "Right-Hand Rule",
+        description:
+          "Always follows the right wall. Guaranteed to solve simply-connected mazes.",
+        optimal: false,
+        complete: true,
+      },
+    ],
+    [
+      "slime-mold",
+      {
+        type: "slime-mold",
+        name: "Slime Mold Simulation",
+        description:
+          "Bio-inspired algorithm simulating Physarum polycephalum with pheromone trails and emergent pathfinding.",
+        optimal: false,
+        complete: false,
+      },
+    ],
+    [
+      "dijkstra",
+      {
+        type: "dijkstra",
+        name: "Dijkstra's Algorithm",
+        description:
+          "Uniform-cost search algorithm that finds the shortest path in an unweighted graph.",
+        optimal: true,
+        complete: true,
+      },
+    ],
+    [
+      "greedy-best-first",
+      {
+        type: "greedy-best-first",
+        name: "Greedy Best-First Search",
+        description:
+          "Heuristic-guided search that prioritizes nodes closest to the goal, but may not find optimal paths.",
+        optimal: false,
+        complete: false,
+      },
+    ],
+    [
+      "bidirectional",
+      {
+        type: "bidirectional",
+        name: "Bidirectional Search",
+        description:
+          "Searches from both start and goal simultaneously, meeting in the middle for faster pathfinding.",
+        optimal: true,
+        complete: true,
+      },
+    ],
   ]);
 
   static getAvailableSolvers(): SolverInfo[] {
@@ -80,6 +162,18 @@ export class SolverRegistry {
         return new DFSSolver();
       case "bfs":
         return new BFSSolver();
+      case "left-hand":
+        return new LeftHandRuleSolver();
+      case "right-hand":
+        return new RightHandRuleSolver();
+      case "slime-mold":
+        return new SlimeMoldSolver();
+      case "dijkstra":
+        return new DijkstraSolver();
+      case "greedy-best-first":
+        return new GreedyBestFirstSolver();
+      case "bidirectional":
+        return new BidirectionalSearchSolver();
       default:
         throw new Error(`Unknown solver type: ${type}`);
     }

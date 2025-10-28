@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Maze } from "@/core/Maze";
 import { Position, IRenderer, ICamera, ILayerManager } from "@/types";
 
@@ -15,9 +16,11 @@ export class ThreeRenderer implements IRenderer {
   private player: THREE.Mesh | null = null;
   private solutionPath: THREE.Group = new THREE.Group();
   private exploredPath: THREE.Group = new THREE.Group();
+  private links: THREE.Group = new THREE.Group();
 
   // Camera controls
   private cameraController: ICamera;
+  private controls: OrbitControls | null = null;
   private layerManager: ILayerManager;
 
   // Materials
@@ -60,8 +63,19 @@ export class ThreeRenderer implements IRenderer {
     });
 
     // Initialize camera controller and layer manager
-    this.cameraController = new CameraController(this.camera);
+    this.cameraController = new CameraController(this.camera, this.controls);
     this.layerManager = new LayerManager(this.scene);
+
+    // Initialize OrbitControls
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.enableDamping = true;
+    this.controls.dampingFactor = 0.05;
+    this.controls.enableZoom = true;
+    this.controls.enableRotate = true;
+    this.controls.enablePan = true;
+    this.controls.minDistance = 5;
+    this.controls.maxDistance = 100;
+    this.controls.maxPolarAngle = Math.PI / 2; // Prevent going below ground
 
     // Set up lighting
     this.setupLighting();
@@ -92,6 +106,7 @@ export class ThreeRenderer implements IRenderer {
     this.maze = maze;
     this.clearScene();
     this.buildMazeGeometry();
+    this.buildLinkGeometry();
     this.updatePaths(currentPath, solutionPath);
   }
 
@@ -242,6 +257,76 @@ export class ThreeRenderer implements IRenderer {
     this.scene.add(this.floor);
   }
 
+  private buildLinkGeometry(): void {
+    if (!this.maze) return;
+
+    // Clear existing links
+    this.links.clear();
+
+    // Create material for links (glowing effect)
+    const linkMaterial = new THREE.MeshBasicMaterial({
+      color: 0x00ffff,
+      transparent: true,
+      opacity: 0.6,
+    });
+
+    // Get all links from the maze
+    for (const cell of this.maze.getAllCells()) {
+      for (const linkPos of cell.links) {
+        // Create a cylinder to represent the link
+        const geometry = new THREE.CylinderGeometry(0.05, 0.05, 1, 8);
+        const linkMesh = new THREE.Mesh(geometry, linkMaterial);
+
+        // Position the link between the two cells
+        const startX = cell.position.x + 0.5;
+        const startY = 0.5;
+        const startZ = (cell.position.z || 0) + 0.5;
+
+        const endX = linkPos.x + 0.5;
+        const endY = 0.5;
+        const endZ = (linkPos.z || 0) + 0.5;
+
+        // Position at midpoint
+        linkMesh.position.set(
+          (startX + endX) / 2,
+          (startY + endY) / 2,
+          (startZ + endZ) / 2
+        );
+
+        // Rotate to connect the points
+        const direction = new THREE.Vector3(
+          endX - startX,
+          endY - startY,
+          endZ - startZ
+        );
+        const length = direction.length();
+        linkMesh.scale.y = length;
+        linkMesh.lookAt(endX, endY, endZ);
+
+        this.links.add(linkMesh);
+
+        // Add glowing spheres at connection points
+        const sphereGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+        const sphereMaterial = new THREE.MeshBasicMaterial({
+          color: 0x00ffff,
+          transparent: true,
+          opacity: 0.8,
+        });
+
+        const startSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        startSphere.position.set(startX, startY, startZ);
+        this.links.add(startSphere);
+
+        const endSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        endSphere.position.set(endX, endY, endZ);
+        this.links.add(endSphere);
+      }
+    }
+
+    // Add links to scene
+    this.scene.add(this.links);
+  }
+
   private updatePaths(
     currentPath?: Position[],
     solutionPath?: Position[]
@@ -288,6 +373,7 @@ export class ThreeRenderer implements IRenderer {
     this.scene.remove(this.floor);
     this.scene.remove(this.exploredPath);
     this.scene.remove(this.solutionPath);
+    this.scene.remove(this.links);
 
     if (this.player) {
       this.scene.remove(this.player);
@@ -297,6 +383,12 @@ export class ThreeRenderer implements IRenderer {
 
   private animate = (): void => {
     requestAnimationFrame(this.animate);
+
+    // Update controls
+    if (this.controls) {
+      this.controls.update();
+    }
+
     this.renderer.render(this.scene, this.camera);
   };
 
@@ -313,46 +405,89 @@ export class ThreeRenderer implements IRenderer {
 
 class CameraController implements ICamera {
   private _camera: THREE.PerspectiveCamera;
+  private _controls: OrbitControls;
   public position: Position = { x: 0, y: 0, z: 0 };
   public target: Position = { x: 0, y: 0, z: 0 };
   public zoom: number = 1;
 
-  constructor(camera: THREE.PerspectiveCamera) {
+  constructor(camera: THREE.PerspectiveCamera, controls: OrbitControls | null) {
     this._camera = camera;
-    // Suppress unused variable warning - will be used in full implementation
-    void this._camera;
+    this._controls = controls!;
+    this.updatePosition();
+  }
+
+  private updatePosition(): void {
+    if (!this._controls) return;
+
+    this.position = {
+      x: this._camera.position.x,
+      y: this._camera.position.y,
+      z: this._camera.position.z,
+    };
+    this.target = {
+      x: this._controls.target.x,
+      y: this._controls.target.y,
+      z: this._controls.target.z,
+    };
+    this.zoom = this._camera.zoom;
   }
 
   rotate(_deltaX: number, _deltaY: number): void {
-    // TODO: Implement camera rotation with OrbitControls or similar
-    // For now, this is a placeholder
+    // OrbitControls handles rotation through mouse/touch automatically
+    // This method is kept for interface compatibility
+    this.updatePosition();
   }
 
   pan(_deltaX: number, _deltaY: number): void {
-    // TODO: Implement camera pan
-    // For now, this is a placeholder
+    // OrbitControls handles panning through mouse/touch automatically
+    // This method is kept for interface compatibility
+    this.updatePosition();
   }
 
   zoomIn(): void {
-    this.zoom *= 0.9;
-    // TODO: Apply zoom to camera
+    if (!this._controls) return;
+
+    // Zoom in by moving camera closer
+    const direction = new THREE.Vector3();
+    direction
+      .subVectors(this._camera.position, this._controls.target)
+      .normalize();
+    this._camera.position.addScaledVector(direction, -2);
+    this._controls.update();
+    this.updatePosition();
   }
 
   zoomOut(): void {
-    this.zoom *= 1.1;
-    // TODO: Apply zoom to camera
+    if (!this._controls) return;
+
+    // Zoom out by moving camera farther
+    const direction = new THREE.Vector3();
+    direction
+      .subVectors(this._camera.position, this._controls.target)
+      .normalize();
+    this._camera.position.addScaledVector(direction, 2);
+    this._controls.update();
+    this.updatePosition();
   }
 
   reset(): void {
-    this.position = { x: 10, y: 10, z: 10 };
-    this.target = { x: 0, y: 0, z: 0 };
+    this._camera.position.set(10, 10, 10);
+    if (this._controls) {
+      this._controls.target.set(0, 0, 0);
+      this._controls.update();
+    }
     this.zoom = 1;
-    // TODO: Apply reset to camera
+    this._camera.zoom = 1;
+    this._camera.updateProjectionMatrix();
+    this.updatePosition();
   }
 
   setPosition(position: Position): void {
-    this.position = position;
-    // TODO: Apply position to camera
+    this._camera.position.set(position.x, position.y || 10, position.z || 10);
+    if (this._controls) {
+      this._controls.update();
+    }
+    this.updatePosition();
   }
 }
 

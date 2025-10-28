@@ -4,6 +4,9 @@ import { AStarSolver } from "@/solvers/AStarSolver";
 import { DFSSolver } from "@/solvers/DFSSolver";
 import { BFSSolver } from "@/solvers/BFSSolver";
 import { SolverRegistry } from "@/solvers/SolverRegistry";
+import { TimeManager } from "@/core/TimeManager";
+import { DimensionLinker } from "@/core/DimensionLinker";
+import { MazeGenerator } from "@/core/MazeGenerator";
 
 describe("Solvers", () => {
   let maze: Maze;
@@ -84,11 +87,123 @@ describe("Solvers", () => {
 
   test("SolverRegistry provides solver info", () => {
     const solvers = SolverRegistry.getAvailableSolvers();
-    expect(solvers.length).toBe(4);
+    expect(solvers.length).toBe(10);
 
     const astarInfo = SolverRegistry.getSolverInfo("astar");
     expect(astarInfo).toBeDefined();
     expect(astarInfo!.name).toBe("A* Search");
     expect(astarInfo!.optimal).toBe(true);
+  });
+});
+
+describe("TimeManager", () => {
+  let maze: Maze;
+  let timeManager: TimeManager;
+
+  beforeEach(() => {
+    maze = new Maze({
+      puzzleType: "maze",
+      dimensions: "2d",
+      size: { width: 5, height: 5 },
+      timeDimension: {
+        enabled: true,
+        shiftFrequency: 2,
+        stabilityIslands: 20,
+        shiftExtent: 30,
+      },
+    });
+    timeManager = new TimeManager();
+    timeManager.initialize(maze.getConfig());
+    timeManager.setMaze(maze);
+  });
+
+  test("TimeManager initializes correctly", () => {
+    expect(timeManager.getCurrentTimeStep()).toBe(0);
+    expect(timeManager.getStabilityIslands()).toBeDefined();
+  });
+
+  test("TimeManager shifts walls at correct frequency", () => {
+    // Should not shift on first call (timeStep = 0, frequency = 2)
+    const shifted1 = timeManager.shiftWalls();
+    expect(shifted1).toBe(false);
+
+    // Should shift on second call (timeStep = 2, frequency = 2)
+    const shifted2 = timeManager.shiftWalls();
+    expect(shifted2).toBe(true);
+  });
+
+  test("TimeManager maintains stability islands", () => {
+    const stabilityIslands = timeManager.getStabilityIslands();
+    expect(stabilityIslands.length).toBeGreaterThan(0);
+  });
+});
+
+describe("DimensionLinker", () => {
+  let maze: Maze;
+  let dimensionLinker: DimensionLinker;
+
+  beforeEach(() => {
+    maze = new Maze({
+      puzzleType: "maze",
+      dimensions: "2d",
+      size: { width: 5, height: 5 },
+      fifthDimension: {
+        enabled: true,
+        linkageCount: 2,
+      },
+    });
+    dimensionLinker = new DimensionLinker();
+    dimensionLinker.initialize(maze.getConfig());
+  });
+
+  test("DimensionLinker initializes correctly", () => {
+    const links = dimensionLinker.getAllLinks();
+    expect(links).toBeDefined();
+  });
+});
+
+describe("MazeGenerator", () => {
+  test("MazeGenerator creates maze with recursive backtracking", () => {
+    const config = {
+      puzzleType: "maze" as const,
+      dimensions: "2d" as const,
+      size: { width: 5, height: 5 },
+    };
+
+    const generator = new MazeGenerator(config, "recursive-backtracking");
+    const maze = generator.generate();
+
+    expect(maze).toBeDefined();
+    expect(maze.getDimensions().width).toBe(5);
+    expect(maze.getDimensions().height).toBe(5);
+  });
+
+  test("MazeGenerator creates maze with Prim's algorithm", () => {
+    const config = {
+      puzzleType: "maze" as const,
+      dimensions: "2d" as const,
+      size: { width: 5, height: 5 },
+    };
+
+    const generator = new MazeGenerator(config, "prim");
+    const maze = generator.generate();
+
+    expect(maze).toBeDefined();
+    expect(maze.getDimensions().width).toBe(5);
+    expect(maze.getDimensions().height).toBe(5);
+  });
+
+  test("MazeGenerator creates labyrinth", () => {
+    const config = {
+      puzzleType: "labyrinth" as const,
+      dimensions: "2d" as const,
+      size: { width: 5, height: 5 },
+    };
+
+    const generator = new MazeGenerator(config);
+    const maze = generator.generate();
+
+    expect(maze).toBeDefined();
+    expect(maze.getConfig().puzzleType).toBe("labyrinth");
   });
 });

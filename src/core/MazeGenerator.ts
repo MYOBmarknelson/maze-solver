@@ -4,9 +4,15 @@ import { Position, MazeConfig } from "@/types";
 export class MazeGenerator {
   private maze: Maze;
   private config: MazeConfig;
+  private algorithm: "recursive-backtracking" | "prim" =
+    "recursive-backtracking";
 
-  constructor(config: MazeConfig) {
+  constructor(
+    config: MazeConfig,
+    algorithm: "recursive-backtracking" | "prim" = "recursive-backtracking"
+  ) {
     this.config = config;
+    this.algorithm = algorithm;
     this.maze = new Maze(config);
   }
 
@@ -14,7 +20,11 @@ export class MazeGenerator {
     this.maze.reset();
 
     if (this.config.puzzleType === "maze") {
-      this.generateMaze();
+      if (this.algorithm === "prim") {
+        this.generateMazePrim();
+      } else {
+        this.generateMaze();
+      }
     } else {
       this.generateLabyrinth();
     }
@@ -54,6 +64,58 @@ export class MazeGenerator {
       } else {
         // Backtrack
         stack.pop();
+      }
+    }
+  }
+
+  private generateMazePrim(): void {
+    // Use Prim's algorithm
+    const frontiers: Position[] = [];
+    const startPosition: Position =
+      this.config.dimensions === "3d" ? { x: 0, y: 0, z: 0 } : { x: 0, y: 0 };
+
+    // Start with the initial cell
+    this.maze.markVisited(startPosition, true);
+
+    // Add neighbors of start to frontiers
+    const startNeighbors = this.maze.getNeighbors(startPosition);
+    frontiers.push(...startNeighbors);
+
+    while (frontiers.length > 0) {
+      // Choose a random frontier cell
+      const randomIndex = Math.floor(Math.random() * frontiers.length);
+      const current = frontiers[randomIndex]!;
+
+      // Remove from frontiers
+      frontiers.splice(randomIndex, 1);
+
+      // Skip if already visited
+      if (this.maze.isVisited(current)) continue;
+
+      // Find visited neighbors
+      const neighbors = this.maze.getNeighbors(current);
+      const visitedNeighbors = neighbors.filter((neighbor) =>
+        this.maze.isVisited(neighbor)
+      );
+
+      if (visitedNeighbors.length > 0) {
+        // Choose a random visited neighbor to connect to
+        const connectTo =
+          visitedNeighbors[
+            Math.floor(Math.random() * visitedNeighbors.length)
+          ]!;
+
+        // Remove wall between current and chosen neighbor
+        this.removeWallBetween(current, connectTo);
+
+        // Mark current as visited
+        this.maze.markVisited(current, true);
+
+        // Add unvisited neighbors of current to frontiers
+        const unvisitedNeighbors = this.maze
+          .getNeighbors(current)
+          .filter((neighbor) => !this.maze.isVisited(neighbor));
+        frontiers.push(...unvisitedNeighbors);
       }
     }
   }

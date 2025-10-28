@@ -32,6 +32,7 @@ export interface MazeConfig {
     height: number;
     depth?: number; // 3D only
   };
+  generationAlgorithm?: "recursive-backtracking" | "prim";
   timeDimension?: {
     enabled: boolean;
     shiftFrequency: number;
@@ -144,6 +145,8 @@ export interface AppState {
   config: MazeConfig;
   solver: ISolver | null;
   renderer: IRenderer | null;
+  timeManager: import("./../core/TimeManager").TimeManager | null;
+  dimensionLinker: import("./../core/DimensionLinker").DimensionLinker | null;
   currentSolution: Solution | null;
   isGenerating: boolean;
   isSolving: boolean;
