@@ -225,7 +225,9 @@ export class DijkstraSolver implements ISolver {
 
   private getNeighbors(pos: Position): Position[] {
     if (!this.maze) return [];
-    return this.maze.getNeighbors(pos);
+    return this.maze
+      .getNeighbors(pos)
+      .filter((neighbor) => this.maze!.canMove(pos, neighbor));
   }
 
   private reconstructPath(): Position[] {

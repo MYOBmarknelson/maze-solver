@@ -110,16 +110,34 @@ export class ThreeRenderer implements IRenderer {
 
   public initialize(container: HTMLElement): void {
     this.container = container;
-    this.renderer.setSize(container.clientWidth, container.clientHeight);
+
+    // Get container dimensions
+    const rect = container.getBoundingClientRect();
+    const width = Math.max(rect.width || 400, 400);
+    const height = Math.max(rect.height || 400, 400);
+
+    this.renderer.setSize(width, height);
     this.renderer.setClearColor(0x2c3e50); // Dark blue-gray background
     container.appendChild(this.renderer.domElement);
 
     // Handle window resize
     window.addEventListener("resize", () => this.onWindowResize());
 
+    // Also handle container resize (in case the container changes size)
+    const resizeObserver = new ResizeObserver(() => this.onContainerResize());
+    resizeObserver.observe(container);
+
     // Set initial camera position
     this.camera.position.set(10, 10, 10);
     this.camera.lookAt(0, 0, 0);
+
+    console.log(
+      "ThreeRenderer initialized with size:",
+      width,
+      height,
+      "rect:",
+      rect
+    );
   }
 
   public render(
@@ -127,14 +145,26 @@ export class ThreeRenderer implements IRenderer {
     currentPath?: Position[],
     solutionPath?: Position[]
   ): void {
+    console.log("ThreeRenderer.render called with maze:", maze.getDimensions());
     this.maze = maze;
     this.clearScene();
+
+    // Add a test cube to see if rendering works
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    const cube = new THREE.Mesh(geometry, material);
+    cube.position.set(0, 0.5, 0);
+    this.scene.add(cube);
+    console.log("Added test cube to scene");
+
     this.buildMazeGeometry();
     this.buildLinkGeometry();
     this.updatePaths(currentPath, solutionPath);
 
     // Position camera to center on maze
     this.positionCameraForMaze();
+
+    console.log("Maze rendered successfully");
   }
 
   public setLayerOpacity(layer: number, opacity: number): void {
@@ -486,11 +516,16 @@ export class ThreeRenderer implements IRenderer {
     this.solutionPath.clear();
 
     if (currentPath && currentPath.length > 0) {
-      this.drawPath(currentPath, this.exploredMaterial, this.exploredPath);
+      this.drawPath(
+        currentPath,
+        this.exploredMaterial,
+        this.exploredPath,
+        true
+      );
     }
 
     if (solutionPath && solutionPath.length > 0) {
-      this.drawPath(solutionPath, this.solutionMaterial, this.solutionPath);
+      this.drawSolutionPath(solutionPath);
     }
 
     // Add paths to scene
@@ -501,19 +536,76 @@ export class ThreeRenderer implements IRenderer {
   private drawPath(
     path: Position[],
     material: THREE.Material,
-    group: THREE.Group
+    group: THREE.Group,
+    highlightHead: boolean = false
   ): void {
     const sphereGeometry = new THREE.SphereGeometry(0.1);
+    const headMaterial = new THREE.MeshBasicMaterial({
+      color: 0xff6600, // Orange for current head
+      transparent: true,
+      opacity: 0.9,
+    });
 
-    for (const position of path) {
+    for (let i = 0; i < path.length; i++) {
+      const position = path[i]!;
       const { x, y } = position;
       const worldX = x + 0.5;
       const worldY = 0.5;
       const worldZ = y + 0.5; // Use maze Y for world Z axis
 
-      const sphere = new THREE.Mesh(sphereGeometry, material);
+      // Use different material for the head (last position)
+      const isHead = highlightHead && i === path.length - 1;
+      const sphere = new THREE.Mesh(
+        sphereGeometry,
+        isHead ? headMaterial : material
+      );
       sphere.position.set(worldX, worldY, worldZ);
       group.add(sphere);
+    }
+  }
+
+  private drawSolutionPath(path: Position[]): void {
+    if (path.length < 2) return;
+
+    // Create a line geometry for the solution path
+    const points: THREE.Vector3[] = [];
+
+    for (const position of path) {
+      const { x, y } = position;
+      const worldX = x + 0.5;
+      const worldY = 0.5;
+      const worldZ = y + 0.5;
+      points.push(new THREE.Vector3(worldX, worldY, worldZ));
+    }
+
+    const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+    const lineMaterial = new THREE.LineBasicMaterial({
+      color: MATERIAL_COLORS.SOLUTION,
+      linewidth: 3,
+      transparent: true,
+      opacity: 0.8,
+    });
+
+    const line = new THREE.Line(lineGeometry, lineMaterial);
+    this.solutionPath.add(line);
+
+    // Add spheres at key points for visibility
+    const sphereGeometry = new THREE.SphereGeometry(0.12);
+    const sphereMaterial = new THREE.MeshBasicMaterial({
+      color: MATERIAL_COLORS.SOLUTION,
+      transparent: true,
+      opacity: 0.9,
+    });
+
+    for (const position of path) {
+      const { x, y } = position;
+      const worldX = x + 0.5;
+      const worldY = 0.5;
+      const worldZ = y + 0.5;
+
+      const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+      sphere.position.set(worldX, worldY, worldZ);
+      this.solutionPath.add(sphere);
     }
   }
 
@@ -544,13 +636,22 @@ export class ThreeRenderer implements IRenderer {
   };
 
   private onWindowResize(): void {
-    this.camera.aspect =
-      this.container.clientWidth / this.container.clientHeight;
+    if (!this.container) return;
+
+    const rect = this.container.getBoundingClientRect();
+    const width = Math.max(rect.width || 400, 400);
+    const height = Math.max(rect.height || 400, 400);
+
+    this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(
-      this.container.clientWidth,
-      this.container.clientHeight
-    );
+    this.renderer.setSize(width, height);
+
+    console.log("Resized to:", width, height);
+  }
+
+  private onContainerResize(): void {
+    // Same logic as window resize, but specifically for container changes
+    this.onWindowResize();
   }
 }
 

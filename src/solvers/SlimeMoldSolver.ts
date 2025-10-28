@@ -292,7 +292,9 @@ export class SlimeMoldSolver implements ISolver {
         break; // Reached start
       }
 
-      const neighbors = this.maze!.getNeighbors(current);
+      const neighbors = this.maze!.getNeighbors(current).filter((neighbor) =>
+        this.maze!.canMove(current, neighbor)
+      );
       let bestNeighbor: Position | null = null;
       let bestStrength = 0;
 

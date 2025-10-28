@@ -29,6 +29,9 @@ export class MazeGenerator {
       this.generateLabyrinth();
     }
 
+    // Ensure openings at start and goal positions
+    this.ensureOpenings();
+
     // Add 5th dimension linkages if configured
     if (this.config.fifthDimension?.enabled) {
       this.addFifthDimensionLinks();
@@ -253,6 +256,50 @@ export class MazeGenerator {
         const backPos: Position = { x: x3, y: y3, z: backZ };
 
         this.maze.addLink(frontPos, backPos);
+      }
+    }
+  }
+
+  private ensureOpenings(): void {
+    const dimensions = this.maze.getDimensions();
+
+    // Define start and goal positions
+    const start: Position =
+      this.config.dimensions === "3d" ? { x: 0, y: 0, z: 0 } : { x: 0, y: 0 };
+    const goal: Position =
+      this.config.dimensions === "3d"
+        ? {
+            x: dimensions.width - 1,
+            y: dimensions.height - 1,
+            z: dimensions.depth - 1,
+          }
+        : { x: dimensions.width - 1, y: dimensions.height - 1 };
+
+    // Remove walls to create openings at start position
+    // For start (top-left), remove north and west walls if they exist
+    if (start.y === 0) {
+      this.maze.setWall(start, "north", false);
+    }
+    if (start.x === 0) {
+      this.maze.setWall(start, "west", false);
+    }
+
+    // Remove walls to create openings at goal position
+    // For goal (bottom-right), remove south and east walls if they exist
+    if (goal.y === dimensions.height - 1) {
+      this.maze.setWall(goal, "south", false);
+    }
+    if (goal.x === dimensions.width - 1) {
+      this.maze.setWall(goal, "east", false);
+    }
+
+    // For 3D mazes, also handle up/down walls
+    if (this.config.dimensions === "3d") {
+      if (start.z === 0) {
+        this.maze.setWall(start, "down", false);
+      }
+      if (goal.z === dimensions.depth - 1) {
+        this.maze.setWall(goal, "up", false);
       }
     }
   }

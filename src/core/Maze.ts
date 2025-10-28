@@ -158,11 +158,11 @@ export class Maze {
 
   public canMove(from: Position, to: Position): boolean {
     // Check direct adjacency
-    const dx = Math.abs(from.x - to.x);
-    const dy = Math.abs(from.y - to.y);
-    const dz = Math.abs((from.z || 0) - (to.z || 0));
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const dz = (to.z || 0) - (from.z || 0);
 
-    const isAdjacent = dx + dy + dz === 1;
+    const isAdjacent = Math.abs(dx) + Math.abs(dy) + Math.abs(dz) === 1;
 
     if (!isAdjacent) {
       // Check for 5th dimension links
@@ -172,7 +172,7 @@ export class Maze {
         : false;
     }
 
-    // Check walls
+    // Check walls based on direction
     if (dx === 1) return !this.hasWall(from, "east");
     if (dx === -1) return !this.hasWall(from, "west");
     if (dy === 1) return !this.hasWall(from, "south");
