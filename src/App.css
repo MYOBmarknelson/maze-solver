@@ -134,6 +134,21 @@
   box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
 }
 
+/* Maze configuration row layout */
+.maze-config-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.dropdowns-column {
+  flex: 1;
+}
+
+.dimensions-column {
+  flex: 1;
+}
+
 /* Select dropdown options styling */
 .control-group select option {
   background: rgba(44, 62, 80, 0.95);

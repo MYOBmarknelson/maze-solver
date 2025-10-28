@@ -306,123 +306,131 @@ const App: React.FC = () => {
         <div className="controls-panel">
           <div className="control-section">
             <h3>Maze Configuration</h3>
-            <div className="control-group">
-              <label>
-                Type:
-                <select
-                  value={appState.config.puzzleType}
-                  onChange={(e) =>
-                    updateConfig({
-                      puzzleType: e.target.value as "maze" | "labyrinth",
-                    })
-                  }
-                >
-                  <option value="maze">Maze</option>
-                  <option value="labyrinth">Labyrinth</option>
-                </select>
-              </label>
-            </div>
+            <div className="maze-config-row">
+              <div className="dropdowns-column">
+                <div className="control-group">
+                  <label>
+                    Type:
+                    <select
+                      value={appState.config.puzzleType}
+                      onChange={(e) =>
+                        updateConfig({
+                          puzzleType: e.target.value as "maze" | "labyrinth",
+                        })
+                      }
+                    >
+                      <option value="maze">Maze</option>
+                      <option value="labyrinth">Labyrinth</option>
+                    </select>
+                  </label>
+                </div>
 
-            <div className="control-group">
-              <label>
-                Dimensions:
-                <select
-                  value={appState.config.dimensions}
-                  onChange={(e) =>
-                    updateConfig({ dimensions: e.target.value as "2d" | "3d" })
-                  }
-                >
-                  <option value="2d">2D</option>
-                  <option value="3d">3D</option>
-                </select>
-              </label>
-            </div>
+                <div className="control-group">
+                  <label>
+                    Dimensions:
+                    <select
+                      value={appState.config.dimensions}
+                      onChange={(e) =>
+                        updateConfig({
+                          dimensions: e.target.value as "2d" | "3d",
+                        })
+                      }
+                    >
+                      <option value="2d">2D</option>
+                      <option value="3d">3D</option>
+                    </select>
+                  </label>
+                </div>
 
-            <div className="control-group">
-              <label>
-                Generation Algorithm:
-                <select
-                  value={
-                    appState.config.generationAlgorithm ||
-                    "recursive-backtracking"
-                  }
-                  onChange={(e) =>
-                    updateConfig({
-                      generationAlgorithm: e.target.value as
-                        | "recursive-backtracking"
-                        | "prim",
-                    })
-                  }
-                >
-                  <option value="recursive-backtracking">
-                    Recursive Backtracking
-                  </option>
-                  <option value="prim">Prim's Algorithm</option>
-                </select>
-              </label>
-            </div>
-
-            <div className="control-group">
-              <label>
-                Width:
-                <input
-                  type="number"
-                  min="3"
-                  max="50"
-                  value={appState.config.size.width}
-                  onChange={(e) =>
-                    updateConfig({
-                      size: {
-                        ...appState.config.size,
-                        width: parseInt(e.target.value) || 10,
-                      },
-                    })
-                  }
-                />
-              </label>
-            </div>
-
-            <div className="control-group">
-              <label>
-                Height:
-                <input
-                  type="number"
-                  min="3"
-                  max="50"
-                  value={appState.config.size.height}
-                  onChange={(e) =>
-                    updateConfig({
-                      size: {
-                        ...appState.config.size,
-                        height: parseInt(e.target.value) || 10,
-                      },
-                    })
-                  }
-                />
-              </label>
-            </div>
-
-            {appState.config.dimensions === "3d" && (
-              <div className="control-group">
-                <label>
-                  Depth:
-                  <input
-                    type="number"
-                    min="1"
-                    max="20"
-                    value={appState.config.size.depth || 1}
-                    onChange={(e) =>
-                      updateConfig({
-                        size: {
-                          ...appState.config.size,
-                          depth: parseInt(e.target.value) || 1,
-                        },
-                      })
-                    }
-                  />
-                </label>
+                <div className="control-group">
+                  <label>
+                    Generation Algorithm:
+                    <select
+                      value={
+                        appState.config.generationAlgorithm ||
+                        "recursive-backtracking"
+                      }
+                      onChange={(e) =>
+                        updateConfig({
+                          generationAlgorithm: e.target.value as
+                            | "recursive-backtracking"
+                            | "prim",
+                        })
+                      }
+                    >
+                      <option value="recursive-backtracking">
+                        Recursive Backtracking
+                      </option>
+                      <option value="prim">Prim's Algorithm</option>
+                    </select>
+                  </label>
+                </div>
               </div>
-            )}
+
+              <div className="dimensions-column">
+                <div className="control-group">
+                  <label>
+                    Width:
+                    <input
+                      type="number"
+                      min="3"
+                      max="50"
+                      value={appState.config.size.width}
+                      onChange={(e) =>
+                        updateConfig({
+                          size: {
+                            ...appState.config.size,
+                            width: parseInt(e.target.value) || 10,
+                          },
+                        })
+                      }
+                    />
+                  </label>
+                </div>
+
+                <div className="control-group">
+                  <label>
+                    Height:
+                    <input
+                      type="number"
+                      min="3"
+                      max="50"
+                      value={appState.config.size.height}
+                      onChange={(e) =>
+                        updateConfig({
+                          size: {
+                            ...appState.config.size,
+                            height: parseInt(e.target.value) || 10,
+                          },
+                        })
+                      }
+                    />
+                  </label>
+                </div>
+
+                {appState.config.dimensions === "3d" && (
+                  <div className="control-group">
+                    <label>
+                      Depth:
+                      <input
+                        type="number"
+                        min="1"
+                        max="20"
+                        value={appState.config.size.depth || 1}
+                        onChange={(e) =>
+                          updateConfig({
+                            size: {
+                              ...appState.config.size,
+                              depth: parseInt(e.target.value) || 1,
+                            },
+                          })
+                        }
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
+            </div>
 
             <div className="control-section time-dimension-section">
               <h4>Time Dimension</h4>
