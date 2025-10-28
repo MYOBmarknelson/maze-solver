@@ -42,18 +42,7 @@
     "allowJs": false,
     "checkJs": false
   },
-  "include": [
-    "src",
-    "tests"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "coverage",
-    ".nyc_output"
-  ],
-  "references": [
-    { "path": "./tsconfig.node.json" }
-  ]
+  "include": ["src", "tests"],
+  "exclude": ["node_modules", "dist", "build", "coverage", ".nyc_output"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }
