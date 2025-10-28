@@ -41,8 +41,11 @@
   },
   "homepage": "https://github.com/MYOBmarknelson/maze-solver#readme",
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
     "@types/jest": "^29.5.0",
     "@types/node": "^20.0.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
     "@types/three": "^0.155.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
@@ -60,9 +63,9 @@
     "vite": "^4.4.0"
   },
   "dependencies": {
-    "three": "^0.155.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "three": "^0.155.0"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": [
@@ -73,7 +76,12 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "jsdom",
-    "setupFilesAfterEnv": ["<rootDir>/src/setupTests.ts"],
+    "setupFilesAfterEnv": [
+      "<rootDir>/src/setupTests.ts"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    },
     "collectCoverageFrom": [
       "src/**/*.{ts,tsx}",
       "!src/**/*.d.ts",
