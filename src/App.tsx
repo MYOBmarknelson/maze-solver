@@ -155,15 +155,43 @@ const App: React.FC = () => {
     const hasMoreSteps = await appState.solver.step();
     const currentPath = appState.solver.getCurrentPath();
 
-    // Update visualization
-    if (rendererRef.current && currentPath.length > 0) {
-      rendererRef.current.render(appState.maze, currentPath);
+    // Store solution path when solving completes
+    if (!hasMoreSteps) {
+      setAppState((prev) => ({
+        ...prev,
+        currentSolution: {
+          solved: true,
+          path: currentPath,
+          steps: [], // TODO: track individual steps if needed
+          stats: {
+            totalSteps: currentPath.length,
+            timeTaken: 0, // TODO: track actual time
+            pathLength: currentPath.length,
+            nodesExplored: currentPath.length, // TODO: track actual explored count
+          },
+        },
+        isSolving: false,
+      }));
     }
 
-    if (!hasMoreSteps) {
-      setAppState((prev) => ({ ...prev, isSolving: false }));
+    // Update visualization
+    if (rendererRef.current && currentPath.length > 0) {
+      const solutionPath =
+        appState.renderConfig.showSolution && appState.currentSolution
+          ? appState.currentSolution.path
+          : undefined;
+      rendererRef.current.render(appState.maze, currentPath, solutionPath);
     }
-  }, [appState.solver, appState.maze]);
+
+    if (hasMoreSteps) {
+      setAppState((prev) => ({ ...prev, isSolving: true }));
+    }
+  }, [
+    appState.solver,
+    appState.maze,
+    appState.renderConfig.showSolution,
+    appState.currentSolution,
+  ]);
 
   // Update configuration
   const updateConfig = useCallback((newConfig: Partial<MazeConfig>) => {
