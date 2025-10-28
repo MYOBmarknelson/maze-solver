@@ -40,7 +40,6 @@ export class ThreeRenderer implements IRenderer {
   private floorMaterial: THREE.MeshLambertMaterial;
   private entryMaterial: THREE.MeshLambertMaterial;
   private exitMaterial: THREE.MeshLambertMaterial;
-  private solutionMaterial: THREE.MeshBasicMaterial;
   private exploredMaterial: THREE.MeshBasicMaterial;
 
   constructor() {
@@ -72,12 +71,6 @@ export class ThreeRenderer implements IRenderer {
     this.exitMaterial = new THREE.MeshLambertMaterial({
       color: MATERIAL_COLORS.EXIT,
       transparent: false,
-    });
-
-    this.solutionMaterial = new THREE.MeshBasicMaterial({
-      color: MATERIAL_COLORS.SOLUTION,
-      transparent: true,
-      opacity: 0.7,
     });
 
     this.exploredMaterial = new THREE.MeshBasicMaterial({

@@ -265,55 +265,79 @@ const App: React.FC = () => {
   const togglePlayback = useCallback(async () => {
     if (!appState.solver || !appState.maze) return;
 
-    if (playbackState.isPlaying) {
-      // Pause
-      setPlaybackState((prev) => ({ ...prev, isPlaying: false }));
-      setAppState((prev) => ({ ...prev, isSolving: false }));
-    } else {
-      // Play
-      setPlaybackState((prev) => ({ ...prev, isPlaying: true }));
-      setAppState((prev) => ({ ...prev, isSolving: true }));
+    setPlaybackState((prev) => {
+      const newIsPlaying = !prev.isPlaying;
 
-      const stepDelay = 1000 / appState.renderConfig.animationSpeed;
-
-      let hasMoreSteps = true;
-      let steps: Position[][] = [];
-
-      while (hasMoreSteps && playbackState.isPlaying) {
-        hasMoreSteps = await appState.solver.step();
-        const currentPath = appState.solver.getCurrentPath();
-        steps.push([...currentPath]);
-
-        // Update visualization
-        if (rendererRef.current && currentPath.length > 0) {
-          const solutionPath =
-            appState.renderConfig.showSolution && appState.currentSolution
-              ? appState.currentSolution.path
-              : undefined;
-          rendererRef.current.render(appState.maze, currentPath, solutionPath);
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, stepDelay));
-
-        if (!hasMoreSteps) {
-          setPlaybackState((prev) => ({
-            ...prev,
-            isPlaying: false,
-            currentStep: steps.length,
-            totalSteps: steps.length,
-            exploredSteps: steps,
-          }));
-          setAppState((prev) => ({ ...prev, isSolving: false }));
-        }
+      if (!newIsPlaying) {
+        // Pausing
+        setAppState((prevApp) => ({ ...prevApp, isSolving: false }));
+        return { ...prev, isPlaying: false };
       }
-    }
+
+      // Starting playback
+      setAppState((prevApp) => ({ ...prevApp, isSolving: true }));
+
+      // Run playback in a separate async function
+      (async () => {
+        const stepDelay = 1000 / appState.renderConfig.animationSpeed;
+        let hasMoreSteps = true;
+        let steps: Position[][] = [];
+        let shouldContinue = true;
+
+        while (hasMoreSteps && shouldContinue) {
+          hasMoreSteps = await appState.solver!.step();
+          const currentPath = appState.solver!.getCurrentPath();
+          steps.push([...currentPath]);
+
+          console.log("Step taken, path length:", currentPath.length);
+
+          // Update visualization
+          if (rendererRef.current && currentPath.length > 0) {
+            const solutionPath =
+              appState.renderConfig.showSolution && appState.currentSolution
+                ? appState.currentSolution.path
+                : undefined;
+            rendererRef.current.render(
+              appState.maze!,
+              currentPath,
+              solutionPath
+            );
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, stepDelay));
+
+          // Check if we should stop
+          setPlaybackState((currentState) => {
+            shouldContinue = currentState.isPlaying;
+            return currentState;
+          });
+
+          if (!hasMoreSteps) {
+            setPlaybackState((prevState) => ({
+              ...prevState,
+              isPlaying: false,
+              currentStep: steps.length,
+              totalSteps: steps.length,
+              exploredSteps: steps,
+            }));
+            setAppState((prevApp) => ({ ...prevApp, isSolving: false }));
+          }
+        }
+
+        // If stopped manually, ensure isSolving is false
+        if (!shouldContinue && hasMoreSteps) {
+          setAppState((prevApp) => ({ ...prevApp, isSolving: false }));
+        }
+      })();
+
+      return { ...prev, isPlaying: true };
+    });
   }, [
     appState.solver,
     appState.maze,
     appState.renderConfig.animationSpeed,
     appState.renderConfig.showSolution,
     appState.currentSolution,
-    playbackState.isPlaying,
   ]);
 
   // Step forward
