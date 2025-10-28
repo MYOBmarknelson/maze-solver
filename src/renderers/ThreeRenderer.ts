@@ -17,6 +17,7 @@ export class ThreeRenderer implements IRenderer {
   private solutionPath: THREE.Group = new THREE.Group();
   private exploredPath: THREE.Group = new THREE.Group();
   private links: THREE.Group = new THREE.Group();
+  private entryExitMarkers: THREE.Group = new THREE.Group();
 
   // Camera controls
   private cameraController: ICamera;
@@ -26,6 +27,8 @@ export class ThreeRenderer implements IRenderer {
   // Materials
   private wallMaterial: THREE.MeshLambertMaterial;
   private floorMaterial: THREE.MeshLambertMaterial;
+  private entryMaterial: THREE.MeshLambertMaterial;
+  private exitMaterial: THREE.MeshLambertMaterial;
   private solutionMaterial: THREE.MeshBasicMaterial;
   private exploredMaterial: THREE.MeshBasicMaterial;
 
@@ -47,6 +50,16 @@ export class ThreeRenderer implements IRenderer {
 
     this.floorMaterial = new THREE.MeshLambertMaterial({
       color: 0x696969, // Dim gray
+      transparent: false,
+    });
+
+    this.entryMaterial = new THREE.MeshLambertMaterial({
+      color: 0x00ff00, // Green for entry
+      transparent: false,
+    });
+
+    this.exitMaterial = new THREE.MeshLambertMaterial({
+      color: 0xff0000, // Red for exit
       transparent: false,
     });
 
@@ -192,6 +205,15 @@ export class ThreeRenderer implements IRenderer {
     // Clear existing geometry
     this.walls.clear();
     this.floor.clear();
+    this.entryExitMarkers.clear();
+
+    // Define entry and exit positions
+    const entryPos: Position = { x: 0, y: 0, z: 0 };
+    const exitPos: Position = {
+      x: dimensions.width - 1,
+      y: dimensions.height - 1,
+      z: dimensions.depth > 1 ? dimensions.depth - 1 : 0,
+    };
 
     // Build walls and floor for each cell
     for (const cell of this.maze.getAllCells()) {
@@ -199,15 +221,29 @@ export class ThreeRenderer implements IRenderer {
       const worldX = x * cellSize;
       const worldZ = y * cellSize; // Use Y coordinate for Z axis (ground plane)
 
-      // Create floor
+      // Check if this is entry or exit cell
+      const isEntry =
+        x === entryPos.x && y === entryPos.y && z === (entryPos.z || 0);
+      const isExit =
+        x === exitPos.x && y === exitPos.y && z === (exitPos.z || 0);
+
+      // Create floor with special material for entry/exit
+      let floorMat = this.floorMaterial;
+      if (isEntry) floorMat = this.entryMaterial;
+      if (isExit) floorMat = this.exitMaterial;
+
       const floorGeometry = new THREE.PlaneGeometry(cellSize, cellSize);
-      const floorMesh = new THREE.Mesh(floorGeometry, this.floorMaterial);
+      const floorMesh = new THREE.Mesh(floorGeometry, floorMat);
       floorMesh.rotation.x = -Math.PI / 2;
       floorMesh.position.set(worldX + cellSize / 2, 0, worldZ + cellSize / 2);
       this.floor.add(floorMesh);
 
-      // Create walls
-      if (cell.walls.north) {
+      // Create walls (skip walls for entry/exit doors)
+      if (
+        cell.walls.north &&
+        !(isEntry && y === 0) &&
+        !(isExit && y === dimensions.height - 1)
+      ) {
         const wallGeometry = new THREE.BoxGeometry(
           cellSize,
           wallHeight,
@@ -218,7 +254,11 @@ export class ThreeRenderer implements IRenderer {
         this.walls.add(wallMesh);
       }
 
-      if (cell.walls.south) {
+      if (
+        cell.walls.south &&
+        !(isEntry && y === 0) &&
+        !(isExit && y === dimensions.height - 1)
+      ) {
         const wallGeometry = new THREE.BoxGeometry(
           cellSize,
           wallHeight,
@@ -233,7 +273,11 @@ export class ThreeRenderer implements IRenderer {
         this.walls.add(wallMesh);
       }
 
-      if (cell.walls.east) {
+      if (
+        cell.walls.east &&
+        !(isEntry && x === 0) &&
+        !(isExit && x === dimensions.width - 1)
+      ) {
         const wallGeometry = new THREE.BoxGeometry(
           wallThickness,
           wallHeight,
@@ -248,7 +292,11 @@ export class ThreeRenderer implements IRenderer {
         this.walls.add(wallMesh);
       }
 
-      if (cell.walls.west) {
+      if (
+        cell.walls.west &&
+        !(isEntry && x === 0) &&
+        !(isExit && x === dimensions.width - 1)
+      ) {
         const wallGeometry = new THREE.BoxGeometry(
           wallThickness,
           wallHeight,
@@ -296,6 +344,56 @@ export class ThreeRenderer implements IRenderer {
     // Add groups to scene
     this.scene.add(this.walls);
     this.scene.add(this.floor);
+    this.scene.add(this.entryExitMarkers);
+
+    // Create entry/exit markers
+    this.createEntryExitMarkers(entryPos, exitPos);
+  }
+
+  private createEntryExitMarkers(entryPos: Position, exitPos: Position): void {
+    const markerRadius = 0.3;
+    const markerHeight = 0.1;
+
+    // Entry marker (green sphere)
+    const entryGeometry = new THREE.SphereGeometry(markerRadius, 16, 16);
+    const entryMarker = new THREE.Mesh(entryGeometry, this.entryMaterial);
+    entryMarker.position.set(entryPos.x + 0.5, markerHeight, entryPos.y + 0.5);
+    this.entryExitMarkers.add(entryMarker);
+
+    // Exit marker (red sphere)
+    const exitGeometry = new THREE.SphereGeometry(markerRadius, 16, 16);
+    const exitMarker = new THREE.Mesh(exitGeometry, this.exitMaterial);
+    exitMarker.position.set(exitPos.x + 0.5, markerHeight, exitPos.y + 0.5);
+    this.entryExitMarkers.add(exitMarker);
+
+    // Add glowing effects
+    const entryGlowGeometry = new THREE.SphereGeometry(
+      markerRadius * 1.2,
+      16,
+      16
+    );
+    const entryGlowMaterial = new THREE.MeshBasicMaterial({
+      color: 0x00ff00,
+      transparent: true,
+      opacity: 0.3,
+    });
+    const entryGlow = new THREE.Mesh(entryGlowGeometry, entryGlowMaterial);
+    entryGlow.position.copy(entryMarker.position);
+    this.entryExitMarkers.add(entryGlow);
+
+    const exitGlowGeometry = new THREE.SphereGeometry(
+      markerRadius * 1.2,
+      16,
+      16
+    );
+    const exitGlowMaterial = new THREE.MeshBasicMaterial({
+      color: 0xff0000,
+      transparent: true,
+      opacity: 0.3,
+    });
+    const exitGlow = new THREE.Mesh(exitGlowGeometry, exitGlowMaterial);
+    exitGlow.position.copy(exitMarker.position);
+    this.entryExitMarkers.add(exitGlow);
   }
 
   private buildLinkGeometry(): void {
@@ -415,6 +513,7 @@ export class ThreeRenderer implements IRenderer {
     this.scene.remove(this.exploredPath);
     this.scene.remove(this.solutionPath);
     this.scene.remove(this.links);
+    this.scene.remove(this.entryExitMarkers);
 
     if (this.player) {
       this.scene.remove(this.player);
