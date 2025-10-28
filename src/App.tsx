@@ -39,11 +39,17 @@ const App: React.FC = () => {
 
   // Initialize renderer when component mounts
   useEffect(() => {
+    console.log("useEffect running, canvasRef.current:", canvasRef.current);
     if (canvasRef.current && !appState.renderer) {
       console.log("Initializing renderer");
       const renderer = new ThreeRenderer();
       renderer.initialize(canvasRef.current);
       setAppState((prev) => ({ ...prev, renderer }));
+      console.log("Renderer initialized and set in state");
+    } else if (!canvasRef.current) {
+      console.log("Canvas ref not available yet");
+    } else {
+      console.log("Renderer already exists");
     }
 
     return () => {
@@ -62,15 +68,19 @@ const App: React.FC = () => {
     setAppState((prev) => ({ ...prev, isGenerating: true }));
 
     try {
+      console.log("Creating maze generator...");
       const generator = new MazeGenerator(
         appState.config,
         appState.config.generationAlgorithm || "recursive-backtracking"
       );
+      console.log("Generator created, calling generate...");
       const maze = generator.generate();
+      console.log("Maze generated:", maze);
 
       // Initialize time manager if time dimension is enabled
       const timeManager = new TimeManager();
       if (appState.config.timeDimension?.enabled) {
+        console.log("Initializing time manager...");
         timeManager.initialize(appState.config);
         timeManager.setMaze(maze);
       }
@@ -78,10 +88,12 @@ const App: React.FC = () => {
       // Initialize dimension linker if 5th dimension is enabled
       const dimensionLinker = new DimensionLinker();
       if (appState.config.fifthDimension?.enabled) {
+        console.log("Initializing dimension linker...");
         dimensionLinker.initialize(appState.config);
         // Links are already added during maze generation
       }
 
+      console.log("Setting app state...");
       setAppState((prev) => ({
         ...prev,
         maze,
@@ -96,8 +108,12 @@ const App: React.FC = () => {
       }));
 
       // Render the maze
+      console.log("Rendering maze, renderer:", appState.renderer);
       if (appState.renderer) {
         appState.renderer.render(maze);
+        console.log("Maze rendered successfully");
+      } else {
+        console.log("No renderer available");
       }
     } catch (error) {
       console.error("Failed to generate maze:", error);
@@ -588,7 +604,10 @@ const App: React.FC = () => {
             </div>
 
             <button
-              onClick={generateMaze}
+              onClick={() => {
+                console.log("Button clicked!");
+                generateMaze();
+              }}
               disabled={appState.isGenerating}
               className="generate-btn"
             >
