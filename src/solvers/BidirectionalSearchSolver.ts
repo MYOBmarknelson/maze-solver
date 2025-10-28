@@ -23,11 +23,15 @@ export class BidirectionalSearchSolver implements ISolver {
   private solved: boolean = false;
   private meetingPoint: Position | null = null;
 
-  async solve(maze: Maze, start: Position, goal: Position): Promise<Solution> {
+  initialize(maze: Maze, start: Position, goal: Position): void {
     this.maze = maze;
     this.start = start;
     this.goal = goal;
     this.reset();
+  }
+
+  async solve(maze: Maze, start: Position, goal: Position): Promise<Solution> {
+    this.initialize(maze, start, goal);
 
     this.startTime = Date.now();
     this.initializeNodes();

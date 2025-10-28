@@ -29,7 +29,7 @@ export class SlimeMoldSolver implements ISolver {
   private readonly ATTRACTION_STRENGTH = 0.8;
   private readonly RANDOM_MOVEMENT = 0.3;
 
-  async solve(maze: Maze, start: Position, goal: Position): Promise<Solution> {
+  initialize(maze: Maze, start: Position, goal: Position): void {
     this.maze = maze;
     this.goal = goal;
     this.currentPath = [start];
@@ -37,10 +37,14 @@ export class SlimeMoldSolver implements ISolver {
     this.pheromones.clear();
     this.isComplete = false;
 
-    const startTime = performance.now();
-
     // Initialize agents
     this.initializeAgents(start);
+  }
+
+  async solve(maze: Maze, start: Position, goal: Position): Promise<Solution> {
+    this.initialize(maze, start, goal);
+
+    const startTime = performance.now();
 
     let steps = 0;
     const maxSteps = 2000; // Allow more steps for emergent behavior

@@ -64,6 +64,11 @@ export interface Solution {
 }
 
 export interface ISolver {
+  initialize(
+    maze: import("./../core/Maze").Maze,
+    start: Position,
+    goal: Position
+  ): void;
   solve(
     maze: import("./../core/Maze").Maze,
     start: Position,

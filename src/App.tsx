@@ -137,25 +137,13 @@ const App: React.FC = () => {
             : 0,
       };
 
+      // Initialize solver for step-by-step solving
+      await solver.solve(appState.maze, start, goal);
+
       setAppState((prev) => ({ ...prev, solver, isSolving: true }));
 
-      try {
-        const solution = await solver.solve(appState.maze, start, goal);
-
-        setAppState((prev) => ({
-          ...prev,
-          currentSolution: solution,
-          isSolving: false,
-        }));
-
-        // Render solution
-        if (rendererRef.current && solution.path.length > 0) {
-          rendererRef.current.render(appState.maze!, undefined, solution.path);
-        }
-      } catch (error) {
-        console.error("Failed to solve maze:", error);
-        setAppState((prev) => ({ ...prev, isSolving: false }));
-      }
+      // Don't solve immediately - let user step through it
+      // The solver is now initialized and ready for stepping
     },
     [appState.maze, appState.config]
   );
@@ -641,7 +629,7 @@ const App: React.FC = () => {
             </div>
 
             <div className="control-group">
-              <label>
+              <label className="checkbox-label">
                 <input
                   type="checkbox"
                   checked={appState.renderConfig.showSolution}
@@ -660,7 +648,7 @@ const App: React.FC = () => {
             </div>
 
             <div className="control-group">
-              <label>
+              <label className="checkbox-label">
                 <input
                   type="checkbox"
                   checked={appState.renderConfig.showExplored}

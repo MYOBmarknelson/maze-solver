@@ -15,15 +15,13 @@ export class BFSSolver implements ISolver {
   private goal: Position | null = null;
   private isComplete: boolean = false;
 
-  async solve(maze: Maze, start: Position, goal: Position): Promise<Solution> {
+  initialize(maze: Maze, start: Position, goal: Position): void {
     this.maze = maze;
     this.goal = goal;
     this.currentPath = [start];
     this.queue = [];
     this.visited.clear();
     this.isComplete = false;
-
-    const startTime = performance.now();
 
     // Initialize with start node
     const startNode: BFSNode = {
@@ -34,6 +32,12 @@ export class BFSSolver implements ISolver {
 
     this.queue.push(startNode);
     this.visited.add(this.positionToString(start));
+  }
+
+  async solve(maze: Maze, start: Position, goal: Position): Promise<Solution> {
+    this.initialize(maze, start, goal);
+
+    const startTime = performance.now();
 
     let steps = 0;
     const maxSteps = 10000;

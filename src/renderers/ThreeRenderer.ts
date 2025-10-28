@@ -3,6 +3,17 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Maze } from "@/core/Maze";
 import { Position, IRenderer, ICamera, ILayerManager } from "@/types";
 
+// Material color constants
+const MATERIAL_COLORS = {
+  WALL: 0x8b7355, // Stone brown
+  FLOOR: 0xa9a9a9, // Light gray
+  ENTRY: 0x00ff00, // Green for entry
+  EXIT: 0xff0000, // Red for exit
+  SOLUTION: 0x00ff00, // Green for solution path
+  EXPLORED: 0xffff00, // Yellow for explored path
+  LINK: 0x00ffff, // Cyan for 5th dimension links
+} as const;
+
 export class ThreeRenderer implements IRenderer {
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
@@ -44,33 +55,33 @@ export class ThreeRenderer implements IRenderer {
 
     // Initialize materials with stone-like colors
     this.wallMaterial = new THREE.MeshLambertMaterial({
-      color: 0x8b7355, // Stone brown
+      color: MATERIAL_COLORS.WALL,
       transparent: false,
     });
 
     this.floorMaterial = new THREE.MeshLambertMaterial({
-      color: 0x696969, // Dim gray
+      color: MATERIAL_COLORS.FLOOR,
       transparent: false,
     });
 
     this.entryMaterial = new THREE.MeshLambertMaterial({
-      color: 0x00ff00, // Green for entry
+      color: MATERIAL_COLORS.ENTRY,
       transparent: false,
     });
 
     this.exitMaterial = new THREE.MeshLambertMaterial({
-      color: 0xff0000, // Red for exit
+      color: MATERIAL_COLORS.EXIT,
       transparent: false,
     });
 
     this.solutionMaterial = new THREE.MeshBasicMaterial({
-      color: 0x00ff00, // Green
+      color: MATERIAL_COLORS.SOLUTION,
       transparent: true,
       opacity: 0.7,
     });
 
     this.exploredMaterial = new THREE.MeshBasicMaterial({
-      color: 0xffff00, // Yellow
+      color: MATERIAL_COLORS.EXPLORED,
       transparent: true,
       opacity: 0.5,
     });
@@ -152,14 +163,14 @@ export class ThreeRenderer implements IRenderer {
 
     // Calculate camera distance based on larger dimension for good visibility
     const maxDimension = Math.max(dimensions.width, dimensions.height);
-    const cameraDistance = maxDimension * 1.5; // Scale factor for good view
+    const cameraDistance = maxDimension * 1.2; // Scale factor for good top-down view
 
-    // Position camera above and to the side of maze center
-    const cameraX = mazeCenterX + cameraDistance * 0.7;
-    const cameraY = cameraDistance * 0.8;
-    const cameraZ = mazeCenterZ + cameraDistance * 0.7;
+    // Position camera directly above maze center for top-down view
+    const cameraX = mazeCenterX;
+    const cameraY = cameraDistance; // High above the maze
+    const cameraZ = mazeCenterZ;
 
-    // Set camera position and target
+    // Set camera position and target (looking straight down)
     this.camera.position.set(cameraX, cameraY, cameraZ);
     this.camera.lookAt(mazeCenterX, mazeCenterY, mazeCenterZ);
 
@@ -373,7 +384,7 @@ export class ThreeRenderer implements IRenderer {
       16
     );
     const entryGlowMaterial = new THREE.MeshBasicMaterial({
-      color: 0x00ff00,
+      color: MATERIAL_COLORS.ENTRY,
       transparent: true,
       opacity: 0.3,
     });
@@ -387,7 +398,7 @@ export class ThreeRenderer implements IRenderer {
       16
     );
     const exitGlowMaterial = new THREE.MeshBasicMaterial({
-      color: 0xff0000,
+      color: MATERIAL_COLORS.EXIT,
       transparent: true,
       opacity: 0.3,
     });
@@ -404,7 +415,7 @@ export class ThreeRenderer implements IRenderer {
 
     // Create material for links (glowing effect)
     const linkMaterial = new THREE.MeshBasicMaterial({
-      color: 0x00ffff,
+      color: MATERIAL_COLORS.LINK,
       transparent: true,
       opacity: 0.6,
     });
@@ -447,7 +458,7 @@ export class ThreeRenderer implements IRenderer {
         // Add glowing spheres at connection points
         const sphereGeometry = new THREE.SphereGeometry(0.1, 8, 8);
         const sphereMaterial = new THREE.MeshBasicMaterial({
-          color: 0x00ffff,
+          color: MATERIAL_COLORS.LINK,
           transparent: true,
           opacity: 0.8,
         });

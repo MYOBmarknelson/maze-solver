@@ -20,11 +20,15 @@ export class DijkstraSolver implements ISolver {
   private startTime: number = 0;
   private solved: boolean = false;
 
-  async solve(maze: Maze, start: Position, goal: Position): Promise<Solution> {
+  initialize(maze: Maze, start: Position, goal: Position): void {
     this.maze = maze;
     this.start = start;
     this.goal = goal;
     this.reset();
+  }
+
+  async solve(maze: Maze, start: Position, goal: Position): Promise<Solution> {
+    this.initialize(maze, start, goal);
 
     this.startTime = Date.now();
     this.initializeNodes();
@@ -49,8 +53,8 @@ export class DijkstraSolver implements ISolver {
 
       // Check if we reached the goal
       if (
-        currentNode.position.x === this.goal.x &&
-        currentNode.position.y === this.goal.y
+        currentNode.position.x === this.goal!.x &&
+        currentNode.position.y === this.goal!.y
       ) {
         this.path = this.reconstructPath();
         this.solved = true;

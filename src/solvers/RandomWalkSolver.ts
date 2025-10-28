@@ -8,12 +8,16 @@ export class RandomWalkSolver implements ISolver {
   private goal: Position | null = null;
   private isComplete: boolean = false;
 
-  async solve(maze: Maze, start: Position, goal: Position): Promise<Solution> {
+  initialize(maze: Maze, start: Position, goal: Position): void {
     this.maze = maze;
     this.goal = goal;
     this.currentPath = [start];
     this.visited.clear();
     this.isComplete = false;
+  }
+
+  async solve(maze: Maze, start: Position, goal: Position): Promise<Solution> {
+    this.initialize(maze, start, goal);
 
     const startTime = performance.now();
     let steps = 0;

@@ -17,15 +17,13 @@ export class AStarSolver implements ISolver {
   private goal: Position | null = null;
   private isComplete: boolean = false;
 
-  async solve(maze: Maze, start: Position, goal: Position): Promise<Solution> {
+  initialize(maze: Maze, start: Position, goal: Position): void {
     this.maze = maze;
     this.goal = goal;
     this.currentPath = [start];
     this.openSet = [];
     this.closedSet.clear();
     this.isComplete = false;
-
-    const startTime = performance.now();
 
     // Initialize start node
     const startNode: AStarNode = {
@@ -37,6 +35,12 @@ export class AStarSolver implements ISolver {
     };
 
     this.openSet.push(startNode);
+  }
+
+  async solve(maze: Maze, start: Position, goal: Position): Promise<Solution> {
+    this.initialize(maze, start, goal);
+
+    const startTime = performance.now();
 
     let steps = 0;
     const maxSteps = 10000;

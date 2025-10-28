@@ -128,11 +128,16 @@
   font-size: 0.9rem;
 }
 
-.control-group input:focus,
-.control-group select:focus {
-  outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+/* Inline checkbox styling for solver controls */
+.checkbox-label {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #bdc3c7;
+  font-weight: 500;
 }
 
 /* Maze configuration row layout */
@@ -235,6 +240,43 @@ button:disabled {
 
 .reset-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, #7f8c8d 0%, #6c7b7d 100%);
+}
+
+/* Additional button styles */
+.export-btn {
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+  width: 100%;
+}
+
+.export-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #8e44ad 0%, #7d3c98 100%);
+}
+
+.import-btn {
+  background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+  width: 100%;
+}
+
+.import-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #16a085 0%, #138f76 100%);
+}
+
+.compare-btn {
+  background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+  width: 100%;
+}
+
+.compare-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+}
+
+.camera-btn {
+  background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+  width: 100%;
+}
+
+.camera-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2c3e50 0%, #1b2631 100%);
 }
 
 /* Stats Display */
