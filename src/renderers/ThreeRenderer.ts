@@ -154,9 +154,9 @@ export class ThreeRenderer implements IRenderer {
 
     // Build walls and floor for each cell
     for (const cell of this.maze.getAllCells()) {
-      const { x, z = 0 } = cell.position;
+      const { x, y, z = 0 } = cell.position;
       const worldX = x * cellSize;
-      const worldZ = z * cellSize;
+      const worldZ = y * cellSize; // Use Y coordinate for Z axis (ground plane)
 
       // Create floor
       const floorGeometry = new THREE.PlaneGeometry(cellSize, cellSize);
@@ -280,11 +280,11 @@ export class ThreeRenderer implements IRenderer {
         // Position the link between the two cells
         const startX = cell.position.x + 0.5;
         const startY = 0.5;
-        const startZ = (cell.position.z || 0) + 0.5;
+        const startZ = cell.position.y + 0.5; // Use maze Y for world Z
 
         const endX = linkPos.x + 0.5;
         const endY = 0.5;
-        const endZ = (linkPos.z || 0) + 0.5;
+        const endZ = linkPos.y + 0.5; // Use maze Y for world Z
 
         // Position at midpoint
         linkMesh.position.set(
@@ -356,10 +356,10 @@ export class ThreeRenderer implements IRenderer {
     const sphereGeometry = new THREE.SphereGeometry(0.1);
 
     for (const position of path) {
-      const { x, z = 0 } = position;
+      const { x, y } = position;
       const worldX = x + 0.5;
       const worldY = 0.5;
-      const worldZ = z + 0.5;
+      const worldZ = y + 0.5; // Use maze Y for world Z axis
 
       const sphere = new THREE.Mesh(sphereGeometry, material);
       sphere.position.set(worldX, worldY, worldZ);
