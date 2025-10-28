@@ -18,7 +18,6 @@ const App: React.FC = () => {
       size: { width: 10, height: 10 },
     },
     solver: null,
-    renderer: null,
     timeManager: null,
     dimensionLinker: null,
     currentSolution: null,
@@ -36,16 +35,17 @@ const App: React.FC = () => {
   // Refs for DOM elements
   const canvasRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const rendererRef = useRef<ThreeRenderer | null>(null);
 
   // Initialize renderer when component mounts
   useEffect(() => {
     console.log("useEffect running, canvasRef.current:", canvasRef.current);
-    if (canvasRef.current && !appState.renderer) {
+    if (canvasRef.current && !rendererRef.current) {
       console.log("Initializing renderer");
       const renderer = new ThreeRenderer();
       renderer.initialize(canvasRef.current);
-      setAppState((prev) => ({ ...prev, renderer }));
-      console.log("Renderer initialized and set in state");
+      rendererRef.current = renderer;
+      console.log("Renderer initialized and stored in ref");
     } else if (!canvasRef.current) {
       console.log("Canvas ref not available yet");
     } else {
@@ -56,8 +56,8 @@ const App: React.FC = () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
-      if (appState.renderer) {
-        appState.renderer.dispose();
+      if (rendererRef.current) {
+        rendererRef.current.dispose();
       }
     };
   }, []);
@@ -108,9 +108,9 @@ const App: React.FC = () => {
       }));
 
       // Render the maze
-      console.log("Rendering maze, renderer:", appState.renderer);
-      if (appState.renderer) {
-        appState.renderer.render(maze);
+      console.log("Rendering maze, renderer:", rendererRef.current);
+      if (rendererRef.current) {
+        rendererRef.current.render(maze);
         console.log("Maze rendered successfully");
       } else {
         console.log("No renderer available");
@@ -149,8 +149,8 @@ const App: React.FC = () => {
         }));
 
         // Render solution
-        if (appState.renderer && solution.path.length > 0) {
-          appState.renderer.render(appState.maze!, undefined, solution.path);
+        if (rendererRef.current && solution.path.length > 0) {
+          rendererRef.current.render(appState.maze!, undefined, solution.path);
         }
       } catch (error) {
         console.error("Failed to solve maze:", error);
@@ -168,14 +168,14 @@ const App: React.FC = () => {
     const currentPath = appState.solver.getCurrentPath();
 
     // Update visualization
-    if (appState.renderer && currentPath.length > 0) {
-      appState.renderer.render(appState.maze, currentPath);
+    if (rendererRef.current && currentPath.length > 0) {
+      rendererRef.current.render(appState.maze, currentPath);
     }
 
     if (!hasMoreSteps) {
       setAppState((prev) => ({ ...prev, isSolving: false }));
     }
-  }, [appState.solver, appState.maze, appState.renderer]);
+  }, [appState.solver, appState.maze]);
 
   // Update configuration
   const updateConfig = useCallback((newConfig: Partial<MazeConfig>) => {
@@ -242,8 +242,8 @@ const App: React.FC = () => {
           }
 
           // Render the imported maze
-          if (appState.renderer) {
-            appState.renderer.render(maze, solution?.path);
+          if (rendererRef.current) {
+            rendererRef.current.render(maze, solution?.path);
           }
         } catch (error) {
           console.error("Failed to import maze:", error);
@@ -252,7 +252,7 @@ const App: React.FC = () => {
       reader.readAsText(file);
     };
     input.click();
-  }, [appState.renderer]);
+  }, []);
 
   // Compare solvers
   const compareSolvers = useCallback(async () => {
@@ -305,11 +305,11 @@ const App: React.FC = () => {
     }));
 
     // Clear the renderer by not rendering anything
-    if (appState.renderer) {
+    if (rendererRef.current) {
       // For now, we'll just leave the scene as is
       // TODO: Implement proper scene clearing in ThreeRenderer
     }
-  }, [appState.renderer]);
+  }, []);
 
   return (
     <div className="app">
@@ -781,8 +781,8 @@ const App: React.FC = () => {
                           activeLayer: layer,
                         },
                       }));
-                      if (appState.renderer) {
-                        appState.renderer.setLayerOpacity(
+                      if (rendererRef.current) {
+                        rendererRef.current.setLayerOpacity(
                           layer,
                           appState.renderConfig.layerOpacity
                         );
@@ -810,8 +810,8 @@ const App: React.FC = () => {
                           layerOpacity: opacity,
                         },
                       }));
-                      if (appState.renderer) {
-                        appState.renderer.setLayerOpacity(
+                      if (rendererRef.current) {
+                        rendererRef.current.setLayerOpacity(
                           appState.renderConfig.activeLayer,
                           opacity
                         );
@@ -824,8 +824,8 @@ const App: React.FC = () => {
               <div className="control-group">
                 <button
                   onClick={() => {
-                    if (appState.renderer) {
-                      appState.renderer.setCameraPosition({
+                    if (rendererRef.current) {
+                      rendererRef.current.setCameraPosition({
                         x: 0,
                         y: 0,
                         z: 10,

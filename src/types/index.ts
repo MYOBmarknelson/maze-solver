@@ -144,7 +144,6 @@ export interface AppState {
   maze: import("./../core/Maze").Maze | null;
   config: MazeConfig;
   solver: ISolver | null;
-  renderer: IRenderer | null;
   timeManager: import("./../core/TimeManager").TimeManager | null;
   dimensionLinker: import("./../core/DimensionLinker").DimensionLinker | null;
   currentSolution: Solution | null;
