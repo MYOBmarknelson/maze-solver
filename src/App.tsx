@@ -424,7 +424,7 @@ const App: React.FC = () => {
               </div>
             )}
 
-            <div className="control-section">
+            <div className="control-section time-dimension-section">
               <h4>Time Dimension</h4>
               <div className="control-group">
                 <label>

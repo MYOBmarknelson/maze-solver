@@ -63,6 +63,29 @@
   padding-bottom: 0.5rem;
 }
 
+.control-section h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #ecf0f1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 0.25rem;
+}
+
+/* Compact time dimension section */
+.time-dimension-section {
+  padding: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.time-dimension-section .control-group {
+  margin-bottom: 0.75rem;
+}
+
+.time-dimension-section .control-group label {
+  font-size: 0.85rem;
+}
+
 .control-group {
   margin-bottom: 1rem;
 }
@@ -91,6 +114,13 @@
   outline: none;
   border-color: #3498db;
   box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+}
+
+/* Select dropdown options styling */
+.control-group select option {
+  background: rgba(44, 62, 80, 0.95);
+  color: #ecf0f1;
+  padding: 0.5rem;
 }
 
 button {
