@@ -34,33 +34,23 @@ const App: React.FC = () => {
 
   // Refs for DOM elements
   const canvasRef = useRef<HTMLDivElement>(null);
-  const animationFrameRef = useRef<number | null>(null);
   const rendererRef = useRef<ThreeRenderer | null>(null);
 
-  // Initialize renderer when component mounts
+  // Re-render when showSolution toggle changes
   useEffect(() => {
-    console.log("useEffect running, canvasRef.current:", canvasRef.current);
-    if (canvasRef.current && !rendererRef.current) {
-      console.log("Initializing renderer");
-      const renderer = new ThreeRenderer();
-      renderer.initialize(canvasRef.current);
-      rendererRef.current = renderer;
-      console.log("Renderer initialized and stored in ref");
-    } else if (!canvasRef.current) {
-      console.log("Canvas ref not available yet");
-    } else {
-      console.log("Renderer already exists");
+    if (rendererRef.current && appState.maze) {
+      const currentPath = appState.solver?.getCurrentPath() || [];
+      const solutionPath =
+        appState.renderConfig.showSolution && appState.currentSolution
+          ? appState.currentSolution.path
+          : undefined;
+      rendererRef.current.render(appState.maze, currentPath, solutionPath);
     }
-
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      if (rendererRef.current) {
-        rendererRef.current.dispose();
-      }
-    };
-  }, []);
+  }, [
+    appState.renderConfig.showSolution,
+    appState.currentSolution,
+    appState.maze,
+  ]);
 
   // Generate maze
   const generateMaze = useCallback(async () => {
@@ -155,31 +145,42 @@ const App: React.FC = () => {
     const hasMoreSteps = await appState.solver.step();
     const currentPath = appState.solver.getCurrentPath();
 
+    let solutionPath: Position[] | undefined;
+
     // Store solution path when solving completes
     if (!hasMoreSteps) {
+      const finalSolution = {
+        solved: true,
+        path: currentPath,
+        steps: [], // TODO: track individual steps if needed
+        stats: {
+          totalSteps: currentPath.length,
+          timeTaken: 0, // TODO: track actual time
+          pathLength: currentPath.length,
+          nodesExplored: currentPath.length, // TODO: track actual explored count
+        },
+      };
+
       setAppState((prev) => ({
         ...prev,
-        currentSolution: {
-          solved: true,
-          path: currentPath,
-          steps: [], // TODO: track individual steps if needed
-          stats: {
-            totalSteps: currentPath.length,
-            timeTaken: 0, // TODO: track actual time
-            pathLength: currentPath.length,
-            nodesExplored: currentPath.length, // TODO: track actual explored count
-          },
-        },
+        currentSolution: finalSolution,
         isSolving: false,
       }));
+
+      // Use the solution path immediately for rendering
+      solutionPath = appState.renderConfig.showSolution
+        ? currentPath
+        : undefined;
+    } else {
+      // During solving, check if we should show the stored solution
+      solutionPath =
+        appState.renderConfig.showSolution && appState.currentSolution
+          ? appState.currentSolution.path
+          : undefined;
     }
 
     // Update visualization
     if (rendererRef.current && currentPath.length > 0) {
-      const solutionPath =
-        appState.renderConfig.showSolution && appState.currentSolution
-          ? appState.currentSolution.path
-          : undefined;
       rendererRef.current.render(appState.maze, currentPath, solutionPath);
     }
 
