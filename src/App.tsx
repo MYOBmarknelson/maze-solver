@@ -40,6 +40,7 @@ const App: React.FC = () => {
   // Initialize renderer when component mounts
   useEffect(() => {
     if (canvasRef.current && !appState.renderer) {
+      console.log("Initializing renderer");
       const renderer = new ThreeRenderer();
       renderer.initialize(canvasRef.current);
       setAppState((prev) => ({ ...prev, renderer }));
@@ -57,6 +58,7 @@ const App: React.FC = () => {
 
   // Generate maze
   const generateMaze = useCallback(async () => {
+    console.log("Generate maze clicked", appState.config);
     setAppState((prev) => ({ ...prev, isGenerating: true }));
 
     try {
@@ -64,7 +66,7 @@ const App: React.FC = () => {
         appState.config,
         appState.config.generationAlgorithm || "recursive-backtracking"
       );
-      const maze = await generator.generate();
+      const maze = generator.generate();
 
       // Initialize time manager if time dimension is enabled
       const timeManager = new TimeManager();
