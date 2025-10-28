@@ -533,7 +533,7 @@ const App: React.FC = () => {
               )}
             </div>
 
-            <div className="control-section">
+            <div className="control-section fifth-dimension-section">
               <h4>5th Dimension</h4>
               <div className="control-group">
                 <label>

@@ -82,8 +82,25 @@
   margin-bottom: 0.75rem;
 }
 
-.time-dimension-section .control-group label {
+.time-dimension-section .control-group label,
+.fifth-dimension-section .control-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
   font-size: 0.85rem;
+  color: #bdc3c7;
+  font-weight: 500;
+}
+
+/* Compact fifth dimension section */
+.fifth-dimension-section {
+  padding: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.fifth-dimension-section .control-group {
+  margin-bottom: 0.75rem;
 }
 
 .control-group {
