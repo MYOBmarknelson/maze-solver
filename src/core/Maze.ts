@@ -1,8 +1,4 @@
-import {
-  MazeCell,
-  Position,
-  MazeConfig
-} from '@/types';
+import { MazeCell, Position, MazeConfig } from "@/types";
 
 export class Maze {
   private cells: MazeCell[][][] = [];
@@ -15,7 +11,7 @@ export class Maze {
     this.config = config;
     this.width = config.size.width;
     this.height = config.size.height;
-    this.depth = config.dimensions === '3d' ? (config.size.depth || 1) : 1;
+    this.depth = config.dimensions === "3d" ? config.size.depth || 1 : 1;
 
     this.initializeCells();
   }
@@ -28,9 +24,8 @@ export class Maze {
       for (let y = 0; y < this.height; y++) {
         this.cells[z]![y] = [];
         for (let x = 0; x < this.width; x++) {
-          const position: Position = this.config.dimensions === '3d'
-            ? { x, y, z }
-            : { x, y };
+          const position: Position =
+            this.config.dimensions === "3d" ? { x, y, z } : { x, y };
 
           this.cells[z]![y]![x] = {
             position,
@@ -39,13 +34,13 @@ export class Maze {
               south: true,
               east: true,
               west: true,
-              ...(this.config.dimensions === '3d' && {
+              ...(this.config.dimensions === "3d" && {
                 up: z < this.depth - 1,
-                down: z > 0
-              })
+                down: z > 0,
+              }),
             },
             visited: false,
-            links: []
+            links: [],
           };
         }
       }
@@ -55,14 +50,25 @@ export class Maze {
   public getCell(position: Position): MazeCell | null {
     const { x, y, z = 0 } = position;
 
-    if (x < 0 || x >= this.width || y < 0 || y >= this.height || z < 0 || z >= this.depth) {
+    if (
+      x < 0 ||
+      x >= this.width ||
+      y < 0 ||
+      y >= this.height ||
+      z < 0 ||
+      z >= this.depth
+    ) {
       return null;
     }
 
     return this.cells[z]?.[y]?.[x] ?? null;
   }
 
-  public setWall(position: Position, direction: keyof MazeCell['walls'], hasWall: boolean): void {
+  public setWall(
+    position: Position,
+    direction: keyof MazeCell["walls"],
+    hasWall: boolean
+  ): void {
     const cell = this.getCell(position);
     if (cell && cell.walls[direction] !== undefined) {
       cell.walls[direction] = hasWall;
@@ -81,17 +87,25 @@ export class Maze {
     }
   }
 
-  public hasWall(position: Position, direction: keyof MazeCell['walls']): boolean {
+  public hasWall(
+    position: Position,
+    direction: keyof MazeCell["walls"]
+  ): boolean {
     const cell = this.getCell(position);
-    return cell ? (cell.walls[direction] ?? false) : true;
+    return cell ? cell.walls[direction] ?? false : true;
   }
 
   public getNeighbors(position: Position): Position[] {
     const neighbors: Position[] = [];
-    const directions: (keyof MazeCell['walls'])[] = ['north', 'south', 'east', 'west'];
+    const directions: (keyof MazeCell["walls"])[] = [
+      "north",
+      "south",
+      "east",
+      "west",
+    ];
 
-    if (this.config.dimensions === '3d') {
-      directions.push('up', 'down');
+    if (this.config.dimensions === "3d") {
+      directions.push("up", "down");
     }
 
     for (const direction of directions) {
@@ -105,7 +119,7 @@ export class Maze {
   }
 
   public getUnvisitedNeighbors(position: Position): Position[] {
-    return this.getNeighbors(position).filter(pos => {
+    return this.getNeighbors(position).filter((pos) => {
       const cell = this.getCell(pos);
       return cell && !cell.visited;
     });
@@ -128,10 +142,10 @@ export class Maze {
     const toCell = this.getCell(to);
 
     if (fromCell && toCell) {
-      if (!fromCell.links.some(link => this.positionsEqual(link, to))) {
+      if (!fromCell.links.some((link) => this.positionsEqual(link, to))) {
         fromCell.links.push(to);
       }
-      if (!toCell.links.some(link => this.positionsEqual(link, from))) {
+      if (!toCell.links.some((link) => this.positionsEqual(link, from))) {
         toCell.links.push(from);
       }
     }
@@ -148,21 +162,23 @@ export class Maze {
     const dy = Math.abs(from.y - to.y);
     const dz = Math.abs((from.z || 0) - (to.z || 0));
 
-    const isAdjacent = (dx + dy + dz) === 1;
+    const isAdjacent = dx + dy + dz === 1;
 
     if (!isAdjacent) {
       // Check for 5th dimension links
       const fromCell = this.getCell(from);
-      return fromCell ? fromCell.links.some(link => this.positionsEqual(link, to)) : false;
+      return fromCell
+        ? fromCell.links.some((link) => this.positionsEqual(link, to))
+        : false;
     }
 
     // Check walls
-    if (dx === 1) return !this.hasWall(from, 'east');
-    if (dx === -1) return !this.hasWall(from, 'west');
-    if (dy === 1) return !this.hasWall(from, 'south');
-    if (dy === -1) return !this.hasWall(from, 'north');
-    if (dz === 1) return !this.hasWall(from, 'up');
-    if (dz === -1) return !this.hasWall(from, 'down');
+    if (dx === 1) return !this.hasWall(from, "east");
+    if (dx === -1) return !this.hasWall(from, "west");
+    if (dy === 1) return !this.hasWall(from, "south");
+    if (dy === -1) return !this.hasWall(from, "north");
+    if (dz === 1) return !this.hasWall(from, "up");
+    if (dz === -1) return !this.hasWall(from, "down");
 
     return false;
   }
@@ -194,33 +210,54 @@ export class Maze {
     this.initializeCells();
   }
 
-  private getAdjacentPosition(position: Position, direction: keyof MazeCell['walls']): Position | null {
+  private getAdjacentPosition(
+    position: Position,
+    direction: keyof MazeCell["walls"]
+  ): Position | null {
     const { x, y, z = 0 } = position;
 
     switch (direction) {
-      case 'north': return { x, y: y - 1, z };
-      case 'south': return { x, y: y + 1, z };
-      case 'east': return { x: x + 1, y, z };
-      case 'west': return { x: x - 1, y, z };
-      case 'up': return this.config.dimensions === '3d' ? { x, y, z: z + 1 } : null;
-      case 'down': return this.config.dimensions === '3d' ? { x, y, z: z - 1 } : null;
-      default: return null;
+      case "north":
+        return { x, y: y - 1, z };
+      case "south":
+        return { x, y: y + 1, z };
+      case "east":
+        return { x: x + 1, y, z };
+      case "west":
+        return { x: x - 1, y, z };
+      case "up":
+        return this.config.dimensions === "3d" ? { x, y, z: z + 1 } : null;
+      case "down":
+        return this.config.dimensions === "3d" ? { x, y, z: z - 1 } : null;
+      default:
+        return null;
     }
   }
 
-  private getOppositeDirection(direction: keyof MazeCell['walls']): keyof MazeCell['walls'] {
+  private getOppositeDirection(
+    direction: keyof MazeCell["walls"]
+  ): keyof MazeCell["walls"] {
     switch (direction) {
-      case 'north': return 'south';
-      case 'south': return 'north';
-      case 'east': return 'west';
-      case 'west': return 'east';
-      case 'up': return 'down';
-      case 'down': return 'up';
-      default: return direction;
+      case "north":
+        return "south";
+      case "south":
+        return "north";
+      case "east":
+        return "west";
+      case "west":
+        return "east";
+      case "up":
+        return "down";
+      case "down":
+        return "up";
+      default:
+        return direction;
     }
   }
 
   private positionsEqual(pos1: Position, pos2: Position): boolean {
-    return pos1.x === pos2.x && pos1.y === pos2.y && (pos1.z || 0) === (pos2.z || 0);
+    return (
+      pos1.x === pos2.x && pos1.y === pos2.y && (pos1.z || 0) === (pos2.z || 0)
+    );
   }
 }

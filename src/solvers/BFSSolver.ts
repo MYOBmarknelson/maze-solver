@@ -1,5 +1,5 @@
-import { ISolver, Position, Solution } from '@/types';
-import { Maze } from '@/core/Maze';
+import { ISolver, Position, Solution } from "@/types";
+import { Maze } from "@/core/Maze";
 
 interface BFSNode {
   position: Position;
@@ -29,7 +29,7 @@ export class BFSSolver implements ISolver {
     const startNode: BFSNode = {
       position: start,
       parent: null,
-      distance: 0
+      distance: 0,
     };
 
     this.queue.push(startNode);
@@ -49,16 +49,16 @@ export class BFSSolver implements ISolver {
       path: this.currentPath,
       steps: this.currentPath.map((pos, index) => ({
         position: pos,
-        action: index === 0 ? 'move' : 'explore',
-        timestamp: startTime + (index * 10)
+        action: index === 0 ? "move" : "explore",
+        timestamp: startTime + index * 10,
       })),
       solved: this.isComplete,
       stats: {
         totalSteps: steps,
         timeTaken: endTime - startTime,
         nodesExplored: this.visited.size,
-        pathLength: this.currentPath.length
-      }
+        pathLength: this.currentPath.length,
+      },
     };
   }
 
@@ -91,7 +91,7 @@ export class BFSSolver implements ISolver {
       const neighborNode: BFSNode = {
         position: neighbor,
         parent: current,
-        distance: current.distance + 1
+        distance: current.distance + 1,
       };
       this.queue.push(neighborNode);
     }
@@ -140,7 +140,9 @@ export class BFSSolver implements ISolver {
   }
 
   private positionsEqual(pos1: Position, pos2: Position): boolean {
-    return pos1.x === pos2.x && pos1.y === pos2.y && (pos1.z || 0) === (pos2.z || 0);
+    return (
+      pos1.x === pos2.x && pos1.y === pos2.y && (pos1.z || 0) === (pos2.z || 0)
+    );
   }
 
   private positionToString(pos: Position): string {

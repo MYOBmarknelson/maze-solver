@@ -1,8 +1,8 @@
 // Core types and interfaces for the Maze and Labyrinth Constructor and Solver
 
-export type PuzzleType = 'maze' | 'labyrinth';
+export type PuzzleType = "maze" | "labyrinth";
 
-export type DimensionType = '2d' | '3d';
+export type DimensionType = "2d" | "3d";
 
 export interface Position {
   x: number;
@@ -17,8 +17,8 @@ export interface MazeCell {
     south: boolean;
     east: boolean;
     west: boolean;
-    up?: boolean;    // 3D only
-    down?: boolean;  // 3D only
+    up?: boolean; // 3D only
+    down?: boolean; // 3D only
   };
   visited: boolean;
   links: Position[]; // For 5th dimension linkages
@@ -46,7 +46,7 @@ export interface MazeConfig {
 
 export interface SolverStep {
   position: Position;
-  action: 'move' | 'explore' | 'backtrack';
+  action: "move" | "explore" | "backtrack";
   timestamp: number;
 }
 
@@ -63,7 +63,11 @@ export interface Solution {
 }
 
 export interface ISolver {
-  solve(maze: import('./../core/Maze').Maze, start: Position, goal: Position): Promise<Solution>;
+  solve(
+    maze: import("./../core/Maze").Maze,
+    start: Position,
+    goal: Position
+  ): Promise<Solution>;
   step(): Promise<boolean>; // Returns true if more steps available
   getCurrentPath(): Position[];
   reset(): void;
@@ -71,7 +75,11 @@ export interface ISolver {
 
 export interface IRenderer {
   initialize(container: HTMLElement): void;
-  render(maze: import('./../core/Maze').Maze, currentPath?: Position[], solutionPath?: Position[]): void;
+  render(
+    maze: import("./../core/Maze").Maze,
+    currentPath?: Position[],
+    solutionPath?: Position[]
+  ): void;
   setLayerOpacity(layer: number, opacity: number): void;
   setCameraPosition(position: Position): void;
   dispose(): void;
@@ -107,19 +115,19 @@ export interface ITimeManager {
 export interface IDimensionLinker {
   initialize(config: MazeConfig): void;
   getLinkedPosition(position: Position): Position | null;
-  getAllLinks(): Array<{from: Position, to: Position}>;
+  getAllLinks(): Array<{ from: Position; to: Position }>;
   reset(): void;
 }
 
 export interface MazeGenerationOptions {
   seed?: number; // For reproducible generation
-  algorithm?: 'recursive-backtracking' | 'prim' | 'labyrinth';
+  algorithm?: "recursive-backtracking" | "prim" | "labyrinth";
 }
 
 export interface SolverConfig {
   algorithm: string;
-  speed: 'slow' | 'normal' | 'fast';
-  heuristic?: 'manhattan' | 'euclidean' | 'custom';
+  speed: "slow" | "normal" | "fast";
+  heuristic?: "manhattan" | "euclidean" | "custom";
   maxSteps?: number;
 }
 
@@ -132,7 +140,7 @@ export interface RenderConfig {
 }
 
 export interface AppState {
-  maze: import('./../core/Maze').Maze | null;
+  maze: import("./../core/Maze").Maze | null;
   config: MazeConfig;
   solver: ISolver | null;
   renderer: IRenderer | null;

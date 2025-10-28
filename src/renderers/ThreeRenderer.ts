@@ -1,6 +1,6 @@
-import * as THREE from 'three';
-import { Maze } from '@/core/Maze';
-import { Position, IRenderer, ICamera, ILayerManager } from '@/types';
+import * as THREE from "three";
+import { Maze } from "@/core/Maze";
+import { Position, IRenderer, ICamera, ILayerManager } from "@/types";
 
 export class ThreeRenderer implements IRenderer {
   private scene: THREE.Scene;
@@ -28,30 +28,35 @@ export class ThreeRenderer implements IRenderer {
 
   constructor() {
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    this.camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
 
     // Initialize materials with stone-like colors
     this.wallMaterial = new THREE.MeshLambertMaterial({
-      color: 0x8B7355, // Stone brown
-      transparent: false
+      color: 0x8b7355, // Stone brown
+      transparent: false,
     });
 
     this.floorMaterial = new THREE.MeshLambertMaterial({
       color: 0x696969, // Dim gray
-      transparent: false
+      transparent: false,
     });
 
     this.solutionMaterial = new THREE.MeshBasicMaterial({
-      color: 0x00FF00, // Green
+      color: 0x00ff00, // Green
       transparent: true,
-      opacity: 0.7
+      opacity: 0.7,
     });
 
     this.exploredMaterial = new THREE.MeshBasicMaterial({
-      color: 0xFFFF00, // Yellow
+      color: 0xffff00, // Yellow
       transparent: true,
-      opacity: 0.5
+      opacity: 0.5,
     });
 
     // Initialize camera controller and layer manager
@@ -72,14 +77,18 @@ export class ThreeRenderer implements IRenderer {
     container.appendChild(this.renderer.domElement);
 
     // Handle window resize
-    window.addEventListener('resize', () => this.onWindowResize());
+    window.addEventListener("resize", () => this.onWindowResize());
 
     // Set initial camera position
     this.camera.position.set(10, 10, 10);
     this.camera.lookAt(0, 0, 0);
   }
 
-  public render(maze: Maze, currentPath?: Position[], solutionPath?: Position[]): void {
+  public render(
+    maze: Maze,
+    currentPath?: Position[],
+    solutionPath?: Position[]
+  ): void {
     this.maze = maze;
     this.clearScene();
     this.buildMazeGeometry();
@@ -96,7 +105,7 @@ export class ThreeRenderer implements IRenderer {
 
   public dispose(): void {
     this.renderer.dispose();
-    window.removeEventListener('resize', () => this.onWindowResize());
+    window.removeEventListener("resize", () => this.onWindowResize());
   }
 
   private setupLighting(): void {
@@ -143,28 +152,52 @@ export class ThreeRenderer implements IRenderer {
 
       // Create walls
       if (cell.walls.north) {
-        const wallGeometry = new THREE.BoxGeometry(cellSize, wallHeight, wallThickness);
+        const wallGeometry = new THREE.BoxGeometry(
+          cellSize,
+          wallHeight,
+          wallThickness
+        );
         const wallMesh = new THREE.Mesh(wallGeometry, this.wallMaterial);
         wallMesh.position.set(worldX + cellSize / 2, wallHeight / 2, worldZ);
         this.walls.add(wallMesh);
       }
 
       if (cell.walls.south) {
-        const wallGeometry = new THREE.BoxGeometry(cellSize, wallHeight, wallThickness);
+        const wallGeometry = new THREE.BoxGeometry(
+          cellSize,
+          wallHeight,
+          wallThickness
+        );
         const wallMesh = new THREE.Mesh(wallGeometry, this.wallMaterial);
-        wallMesh.position.set(worldX + cellSize / 2, wallHeight / 2, worldZ + cellSize);
+        wallMesh.position.set(
+          worldX + cellSize / 2,
+          wallHeight / 2,
+          worldZ + cellSize
+        );
         this.walls.add(wallMesh);
       }
 
       if (cell.walls.east) {
-        const wallGeometry = new THREE.BoxGeometry(wallThickness, wallHeight, cellSize);
+        const wallGeometry = new THREE.BoxGeometry(
+          wallThickness,
+          wallHeight,
+          cellSize
+        );
         const wallMesh = new THREE.Mesh(wallGeometry, this.wallMaterial);
-        wallMesh.position.set(worldX + cellSize, wallHeight / 2, worldZ + cellSize / 2);
+        wallMesh.position.set(
+          worldX + cellSize,
+          wallHeight / 2,
+          worldZ + cellSize / 2
+        );
         this.walls.add(wallMesh);
       }
 
       if (cell.walls.west) {
-        const wallGeometry = new THREE.BoxGeometry(wallThickness, wallHeight, cellSize);
+        const wallGeometry = new THREE.BoxGeometry(
+          wallThickness,
+          wallHeight,
+          cellSize
+        );
         const wallMesh = new THREE.Mesh(wallGeometry, this.wallMaterial);
         wallMesh.position.set(worldX, wallHeight / 2, worldZ + cellSize / 2);
         this.walls.add(wallMesh);
@@ -173,16 +206,32 @@ export class ThreeRenderer implements IRenderer {
       // 3D walls
       if (dimensions.depth > 1) {
         if (cell.walls.up) {
-          const wallGeometry = new THREE.BoxGeometry(cellSize, wallThickness, cellSize);
+          const wallGeometry = new THREE.BoxGeometry(
+            cellSize,
+            wallThickness,
+            cellSize
+          );
           const wallMesh = new THREE.Mesh(wallGeometry, this.wallMaterial);
-          wallMesh.position.set(worldX + cellSize / 2, wallHeight, worldZ + cellSize / 2);
+          wallMesh.position.set(
+            worldX + cellSize / 2,
+            wallHeight,
+            worldZ + cellSize / 2
+          );
           this.walls.add(wallMesh);
         }
 
         if (cell.walls.down && z > 0) {
-          const wallGeometry = new THREE.BoxGeometry(cellSize, wallThickness, cellSize);
+          const wallGeometry = new THREE.BoxGeometry(
+            cellSize,
+            wallThickness,
+            cellSize
+          );
           const wallMesh = new THREE.Mesh(wallGeometry, this.wallMaterial);
-          wallMesh.position.set(worldX + cellSize / 2, 0, worldZ + cellSize / 2);
+          wallMesh.position.set(
+            worldX + cellSize / 2,
+            0,
+            worldZ + cellSize / 2
+          );
           this.walls.add(wallMesh);
         }
       }
@@ -193,7 +242,10 @@ export class ThreeRenderer implements IRenderer {
     this.scene.add(this.floor);
   }
 
-  private updatePaths(currentPath?: Position[], solutionPath?: Position[]): void {
+  private updatePaths(
+    currentPath?: Position[],
+    solutionPath?: Position[]
+  ): void {
     // Clear existing paths
     this.exploredPath.clear();
     this.solutionPath.clear();
@@ -211,7 +263,11 @@ export class ThreeRenderer implements IRenderer {
     this.scene.add(this.solutionPath);
   }
 
-  private drawPath(path: Position[], material: THREE.Material, group: THREE.Group): void {
+  private drawPath(
+    path: Position[],
+    material: THREE.Material,
+    group: THREE.Group
+  ): void {
     const sphereGeometry = new THREE.SphereGeometry(0.1);
 
     for (const position of path) {
@@ -245,9 +301,13 @@ export class ThreeRenderer implements IRenderer {
   };
 
   private onWindowResize(): void {
-    this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
+    this.camera.aspect =
+      this.container.clientWidth / this.container.clientHeight;
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+    this.renderer.setSize(
+      this.container.clientWidth,
+      this.container.clientHeight
+    );
   }
 }
 
@@ -315,7 +375,7 @@ class LayerManager implements ILayerManager {
   setLayerVisibility(layer: number, visible: boolean): void {
     const objects = this.layerObjects.get(layer);
     if (objects) {
-      objects.forEach(obj => {
+      objects.forEach((obj) => {
         obj.visible = visible;
       });
     }
@@ -324,8 +384,11 @@ class LayerManager implements ILayerManager {
   setLayerOpacity(layer: number, opacity: number): void {
     const objects = this.layerObjects.get(layer);
     if (objects) {
-      objects.forEach(obj => {
-        if (obj instanceof THREE.Mesh && obj.material instanceof THREE.Material) {
+      objects.forEach((obj) => {
+        if (
+          obj instanceof THREE.Mesh &&
+          obj.material instanceof THREE.Material
+        ) {
           obj.material.transparent = opacity < 1;
           obj.material.opacity = opacity;
         }

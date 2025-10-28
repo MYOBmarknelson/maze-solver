@@ -1,5 +1,5 @@
-import { ISolver, Position, Solution } from '@/types';
-import { Maze } from '@/core/Maze';
+import { ISolver, Position, Solution } from "@/types";
+import { Maze } from "@/core/Maze";
 
 interface AStarNode {
   position: Position;
@@ -33,7 +33,7 @@ export class AStarSolver implements ISolver {
       gCost: 0,
       hCost: this.heuristic(start, goal),
       fCost: this.heuristic(start, goal),
-      parent: null
+      parent: null,
     };
 
     this.openSet.push(startNode);
@@ -52,16 +52,16 @@ export class AStarSolver implements ISolver {
       path: this.currentPath,
       steps: this.currentPath.map((pos, index) => ({
         position: pos,
-        action: index === 0 ? 'move' : 'explore',
-        timestamp: startTime + (index * 10)
+        action: index === 0 ? "move" : "explore",
+        timestamp: startTime + index * 10,
       })),
       solved: this.isComplete,
       stats: {
         totalSteps: steps,
         timeTaken: endTime - startTime,
         nodesExplored: this.closedSet.size,
-        pathLength: this.currentPath.length
-      }
+        pathLength: this.currentPath.length,
+      },
     };
   }
 
@@ -105,7 +105,7 @@ export class AStarSolver implements ISolver {
       const fCost = gCost + hCost;
 
       // Check if neighbor is already in open set with lower cost
-      const existingNode = this.openSet.find(node =>
+      const existingNode = this.openSet.find((node) =>
         this.positionsEqual(node.position, neighbor)
       );
 
@@ -115,7 +115,7 @@ export class AStarSolver implements ISolver {
           gCost,
           hCost,
           fCost,
-          parent: current
+          parent: current,
         };
         this.openSet.push(neighborNode);
       } else if (gCost < existingNode.gCost) {
@@ -177,7 +177,9 @@ export class AStarSolver implements ISolver {
   }
 
   private positionsEqual(pos1: Position, pos2: Position): boolean {
-    return pos1.x === pos2.x && pos1.y === pos2.y && (pos1.z || 0) === (pos2.z || 0);
+    return (
+      pos1.x === pos2.x && pos1.y === pos2.y && (pos1.z || 0) === (pos2.z || 0)
+    );
   }
 
   private positionToString(pos: Position): string {

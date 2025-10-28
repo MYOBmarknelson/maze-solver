@@ -1,5 +1,5 @@
-import { Maze } from '@/core/Maze';
-import { Position, MazeConfig } from '@/types';
+import { Maze } from "@/core/Maze";
+import { Position, MazeConfig } from "@/types";
 
 export class MazeGenerator {
   private maze: Maze;
@@ -13,7 +13,7 @@ export class MazeGenerator {
   public generate(): Maze {
     this.maze.reset();
 
-    if (this.config.puzzleType === 'maze') {
+    if (this.config.puzzleType === "maze") {
       this.generateMaze();
     } else {
       this.generateLabyrinth();
@@ -30,9 +30,8 @@ export class MazeGenerator {
   private generateMaze(): void {
     // Use recursive backtracking algorithm
     const stack: Position[] = [];
-    const startPosition: Position = this.config.dimensions === '3d'
-      ? { x: 0, y: 0, z: 0 }
-      : { x: 0, y: 0 };
+    const startPosition: Position =
+      this.config.dimensions === "3d" ? { x: 0, y: 0, z: 0 } : { x: 0, y: 0 };
 
     this.maze.markVisited(startPosition, true);
     stack.push(startPosition);
@@ -66,16 +65,19 @@ export class MazeGenerator {
 
     // Create a spiral pattern for the labyrinth
     const path: Position[] = [];
-    let x = 0, y = 0, z = 0;
-    let dx = 1, dy = 0, dz = 0;
+    let x = 0,
+      y = 0,
+      z = 0;
+    let dx = 1,
+      dy = 0,
+      dz = 0;
     let stepsInDirection = dimensions.width;
     let stepsTaken = 0;
     let directionChanges = 0;
 
     for (let i = 0; i < totalCells; i++) {
-      const position: Position = this.config.dimensions === '3d'
-        ? { x, y, z }
-        : { x, y };
+      const position: Position =
+        this.config.dimensions === "3d" ? { x, y, z } : { x, y };
 
       path.push(position);
 
@@ -91,10 +93,22 @@ export class MazeGenerator {
         directionChanges++;
 
         // Change direction (right turn for spiral)
-        if (dx === 1) { dx = 0; dy = 1; }  // right -> down
-        else if (dy === 1) { dx = -1; dy = 0; }  // down -> left
-        else if (dx === -1) { dx = 0; dy = -1; }  // left -> up
-        else if (dy === -1) { dx = 1; dy = 0; }  // up -> right
+        if (dx === 1) {
+          dx = 0;
+          dy = 1;
+        } // right -> down
+        else if (dy === 1) {
+          dx = -1;
+          dy = 0;
+        } // down -> left
+        else if (dx === -1) {
+          dx = 0;
+          dy = -1;
+        } // left -> up
+        else if (dy === -1) {
+          dx = 1;
+          dy = 0;
+        } // up -> right
 
         // Adjust steps for next direction
         if (directionChanges % 2 === 0) {
@@ -128,13 +142,19 @@ export class MazeGenerator {
       const x1 = Math.floor(Math.random() * dimensions.width);
       const x2 = Math.floor(Math.random() * dimensions.width);
 
-      const topPos: Position = this.config.dimensions === '3d'
-        ? { x: x1, y: topY, z: Math.floor(Math.random() * dimensions.depth) }
-        : { x: x1, y: topY };
+      const topPos: Position =
+        this.config.dimensions === "3d"
+          ? { x: x1, y: topY, z: Math.floor(Math.random() * dimensions.depth) }
+          : { x: x1, y: topY };
 
-      const bottomPos: Position = this.config.dimensions === '3d'
-        ? { x: x2, y: bottomY, z: Math.floor(Math.random() * dimensions.depth) }
-        : { x: x2, y: bottomY };
+      const bottomPos: Position =
+        this.config.dimensions === "3d"
+          ? {
+              x: x2,
+              y: bottomY,
+              z: Math.floor(Math.random() * dimensions.depth),
+            }
+          : { x: x2, y: bottomY };
 
       this.maze.addLink(topPos, bottomPos);
 
@@ -144,18 +164,24 @@ export class MazeGenerator {
       const y1 = Math.floor(Math.random() * dimensions.height);
       const y2 = Math.floor(Math.random() * dimensions.height);
 
-      const leftPos: Position = this.config.dimensions === '3d'
-        ? { x: leftX, y: y1, z: Math.floor(Math.random() * dimensions.depth) }
-        : { x: leftX, y: y1 };
+      const leftPos: Position =
+        this.config.dimensions === "3d"
+          ? { x: leftX, y: y1, z: Math.floor(Math.random() * dimensions.depth) }
+          : { x: leftX, y: y1 };
 
-      const rightPos: Position = this.config.dimensions === '3d'
-        ? { x: rightX, y: y2, z: Math.floor(Math.random() * dimensions.depth) }
-        : { x: rightX, y: y2 };
+      const rightPos: Position =
+        this.config.dimensions === "3d"
+          ? {
+              x: rightX,
+              y: y2,
+              z: Math.floor(Math.random() * dimensions.depth),
+            }
+          : { x: rightX, y: y2 };
 
       this.maze.addLink(leftPos, rightPos);
 
       // Front-Back links (3D only)
-      if (this.config.dimensions === '3d') {
+      if (this.config.dimensions === "3d") {
         const frontZ = 0;
         const backZ = dimensions.depth - 1;
         const x3 = Math.floor(Math.random() * dimensions.width);
@@ -175,17 +201,17 @@ export class MazeGenerator {
     const dz = (pos2.z || 0) - (pos1.z || 0);
 
     if (dx === 1) {
-      this.maze.setWall(pos1, 'east', false);
+      this.maze.setWall(pos1, "east", false);
     } else if (dx === -1) {
-      this.maze.setWall(pos1, 'west', false);
+      this.maze.setWall(pos1, "west", false);
     } else if (dy === 1) {
-      this.maze.setWall(pos1, 'south', false);
+      this.maze.setWall(pos1, "south", false);
     } else if (dy === -1) {
-      this.maze.setWall(pos1, 'north', false);
-    } else if (dz === 1 && this.config.dimensions === '3d') {
-      this.maze.setWall(pos1, 'up', false);
-    } else if (dz === -1 && this.config.dimensions === '3d') {
-      this.maze.setWall(pos1, 'down', false);
+      this.maze.setWall(pos1, "north", false);
+    } else if (dz === 1 && this.config.dimensions === "3d") {
+      this.maze.setWall(pos1, "up", false);
+    } else if (dz === -1 && this.config.dimensions === "3d") {
+      this.maze.setWall(pos1, "down", false);
     }
   }
 

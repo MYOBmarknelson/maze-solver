@@ -1,5 +1,5 @@
-import { ISolver, Position, Solution } from '@/types';
-import { Maze } from '@/core/Maze';
+import { ISolver, Position, Solution } from "@/types";
+import { Maze } from "@/core/Maze";
 
 interface DFSNode {
   position: Position;
@@ -27,7 +27,7 @@ export class DFSSolver implements ISolver {
     // Initialize with start node
     const startNode: DFSNode = {
       position: start,
-      parent: null
+      parent: null,
     };
 
     this.stack.push(startNode);
@@ -47,16 +47,16 @@ export class DFSSolver implements ISolver {
       path: this.currentPath,
       steps: this.currentPath.map((pos, index) => ({
         position: pos,
-        action: index === 0 ? 'move' : 'explore',
-        timestamp: startTime + (index * 10)
+        action: index === 0 ? "move" : "explore",
+        timestamp: startTime + index * 10,
       })),
       solved: this.isComplete,
       stats: {
         totalSteps: steps,
         timeTaken: endTime - startTime,
         nodesExplored: this.visited.size,
-        pathLength: this.currentPath.length
-      }
+        pathLength: this.currentPath.length,
+      },
     };
   }
 
@@ -89,7 +89,7 @@ export class DFSSolver implements ISolver {
       this.visited.add(neighborKey);
       const neighborNode: DFSNode = {
         position: neighbor,
-        parent: current
+        parent: current,
       };
       this.stack.push(neighborNode);
     }
@@ -138,7 +138,9 @@ export class DFSSolver implements ISolver {
   }
 
   private positionsEqual(pos1: Position, pos2: Position): boolean {
-    return pos1.x === pos2.x && pos1.y === pos2.y && (pos1.z || 0) === (pos2.z || 0);
+    return (
+      pos1.x === pos2.x && pos1.y === pos2.y && (pos1.z || 0) === (pos2.z || 0)
+    );
   }
 
   private positionToString(pos: Position): string {

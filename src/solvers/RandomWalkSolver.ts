@@ -1,5 +1,5 @@
-import { ISolver, Position, Solution } from '@/types';
-import { Maze } from '@/core/Maze';
+import { ISolver, Position, Solution } from "@/types";
+import { Maze } from "@/core/Maze";
 
 export class RandomWalkSolver implements ISolver {
   private maze: Maze | null = null;
@@ -30,16 +30,16 @@ export class RandomWalkSolver implements ISolver {
       path: this.currentPath,
       steps: this.currentPath.map((pos, index) => ({
         position: pos,
-        action: index === 0 ? 'move' : 'explore',
-        timestamp: startTime + (index * 10) // Rough estimate
+        action: index === 0 ? "move" : "explore",
+        timestamp: startTime + index * 10, // Rough estimate
       })),
       solved: this.isComplete,
       stats: {
         totalSteps: steps,
         timeTaken: endTime - startTime,
         nodesExplored: this.visited.size,
-        pathLength: this.currentPath.length
-      }
+        pathLength: this.currentPath.length,
+      },
     };
   }
 
@@ -59,10 +59,11 @@ export class RandomWalkSolver implements ISolver {
 
     // Get valid neighbors
     const neighbors = this.maze.getNeighbors(current);
-    const validMoves = neighbors.filter((neighbor): neighbor is Position =>
-      neighbor !== undefined &&
-      this.maze!.canMove(current, neighbor) &&
-      !this.visited.has(this.positionToString(neighbor))
+    const validMoves = neighbors.filter(
+      (neighbor): neighbor is Position =>
+        neighbor !== undefined &&
+        this.maze!.canMove(current, neighbor) &&
+        !this.visited.has(this.positionToString(neighbor))
     );
 
     if (validMoves.length === 0) {
@@ -92,7 +93,9 @@ export class RandomWalkSolver implements ISolver {
   }
 
   private positionsEqual(pos1: Position, pos2: Position): boolean {
-    return pos1.x === pos2.x && pos1.y === pos2.y && (pos1.z || 0) === (pos2.z || 0);
+    return (
+      pos1.x === pos2.x && pos1.y === pos2.y && (pos1.z || 0) === (pos2.z || 0)
+    );
   }
 
   private positionToString(pos: Position): string {
