@@ -108,6 +108,9 @@ export class ThreeRenderer implements IRenderer {
     this.buildMazeGeometry();
     this.buildLinkGeometry();
     this.updatePaths(currentPath, solutionPath);
+
+    // Position camera to center on maze
+    this.positionCameraForMaze();
   }
 
   public setLayerOpacity(layer: number, opacity: number): void {
@@ -121,6 +124,44 @@ export class ThreeRenderer implements IRenderer {
   public dispose(): void {
     this.renderer.dispose();
     window.removeEventListener("resize", () => this.onWindowResize());
+  }
+
+  private positionCameraForMaze(): void {
+    if (!this.maze) return;
+
+    const dimensions = this.maze.getDimensions();
+    const cellSize = 1;
+
+    // Calculate maze center in world coordinates
+    const mazeCenterX = (dimensions.width * cellSize) / 2;
+    const mazeCenterZ = (dimensions.height * cellSize) / 2;
+    const mazeCenterY = 0; // Ground level
+
+    // Calculate camera distance based on larger dimension for good visibility
+    const maxDimension = Math.max(dimensions.width, dimensions.height);
+    const cameraDistance = maxDimension * 1.5; // Scale factor for good view
+
+    // Position camera above and to the side of maze center
+    const cameraX = mazeCenterX + cameraDistance * 0.7;
+    const cameraY = cameraDistance * 0.8;
+    const cameraZ = mazeCenterZ + cameraDistance * 0.7;
+
+    // Set camera position and target
+    this.camera.position.set(cameraX, cameraY, cameraZ);
+    this.camera.lookAt(mazeCenterX, mazeCenterY, mazeCenterZ);
+
+    // Update controls target
+    if (this.controls) {
+      this.controls.target.set(mazeCenterX, mazeCenterY, mazeCenterZ);
+      this.controls.update();
+    }
+
+    // Update camera controller
+    this.cameraController.setPosition({
+      x: cameraX,
+      y: cameraY,
+      z: cameraZ,
+    });
   }
 
   private setupLighting(): void {
@@ -471,7 +512,8 @@ class CameraController implements ICamera {
   }
 
   reset(): void {
-    this._camera.position.set(10, 10, 10);
+    // Reset to a position that works well for typical mazes
+    this._camera.position.set(20, 15, 20);
     if (this._controls) {
       this._controls.target.set(0, 0, 0);
       this._controls.update();
