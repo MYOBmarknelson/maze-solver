@@ -504,6 +504,10 @@ const App: React.FC = () => {
       "bidirectional",
       "bfs",
       "dfs",
+      "random-walk",
+      "left-hand",
+      "right-hand",
+      "slime-mold",
     ];
 
     for (const solverType of solversToTest) {
