@@ -69,7 +69,7 @@ export class SlimeMoldSolver implements ISolver {
     return {
       path: this.currentPath,
       steps: Array.from(this.exploredPositions).map((posStr, index) => {
-        const [x, y, z] = posStr.split(',').map(Number);
+        const [x, y, z] = posStr.split(",").map(Number);
         return {
           position: { x: x || 0, y: y || 0, z: z || 0 },
           action: index === 0 ? "move" : "explore",
@@ -196,8 +196,16 @@ export class SlimeMoldSolver implements ISolver {
     }
 
     // Move to the best neighbor
-    agent.position = { x: bestNeighbor.x, y: bestNeighbor.y, z: bestNeighbor.z || 0 };
-    agent.trail.push({ x: bestNeighbor.x, y: bestNeighbor.y, z: bestNeighbor.z || 0 });
+    agent.position = {
+      x: bestNeighbor.x,
+      y: bestNeighbor.y,
+      z: bestNeighbor.z || 0,
+    };
+    agent.trail.push({
+      x: bestNeighbor.x,
+      y: bestNeighbor.y,
+      z: bestNeighbor.z || 0,
+    });
 
     // Track explored positions
     this.exploredPositions.add(this.positionToString(bestNeighbor));
