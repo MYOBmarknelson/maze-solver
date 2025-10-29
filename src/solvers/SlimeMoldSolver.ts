@@ -22,6 +22,7 @@ export class SlimeMoldSolver implements ISolver {
   private pheromones: Map<string, PheromoneTrail> = new Map();
   private goal: Position | null = null;
   private isComplete: boolean = false;
+  private exploredPositions: Set<string> = new Set();
 
   // Simulation parameters
   private readonly NUM_AGENTS = 20;
@@ -35,10 +36,12 @@ export class SlimeMoldSolver implements ISolver {
     this.currentPath = [start];
     this.agents = [];
     this.pheromones.clear();
+    this.exploredPositions.clear();
     this.isComplete = false;
 
     // Initialize agents
     this.initializeAgents(start);
+    this.exploredPositions.add(this.positionToString(start));
   }
 
   async solve(maze: Maze, start: Position, goal: Position): Promise<Solution> {
@@ -65,11 +68,14 @@ export class SlimeMoldSolver implements ISolver {
 
     return {
       path: this.currentPath,
-      steps: this.currentPath.map((pos, index) => ({
-        position: pos,
-        action: index === 0 ? "move" : "explore",
-        timestamp: startTime + index * 10,
-      })),
+      steps: Array.from(this.exploredPositions).map((posStr, index) => {
+        const [x, y, z] = posStr.split(',').map(Number);
+        return {
+          position: { x: x || 0, y: y || 0, z: z || 0 },
+          action: index === 0 ? "move" : "explore",
+          timestamp: startTime + index * 10,
+        };
+      }),
       solved: this.isComplete,
       stats: {
         totalSteps: steps,
@@ -128,6 +134,17 @@ export class SlimeMoldSolver implements ISolver {
   private moveAgent(agent: SlimeAgent): void {
     const currentPos = agent.position;
 
+    // Get valid neighbors that the agent can move to
+    const neighbors = this.maze!.getNeighbors(currentPos).filter(
+      (neighbor): neighbor is Position =>
+        neighbor !== undefined && this.maze!.canMove(currentPos, neighbor)
+    );
+
+    if (neighbors.length === 0) {
+      agent.active = false;
+      return;
+    }
+
     // Calculate forces from pheromones and goal
     const forces = this.calculateForces(agent);
 
@@ -137,34 +154,67 @@ export class SlimeMoldSolver implements ISolver {
     // Add some random movement
     agent.direction += (Math.random() - 0.5) * this.RANDOM_MOVEMENT;
 
-    // Calculate new position
-    const newX = currentPos.x + Math.cos(agent.direction) * agent.speed;
-    const newY = currentPos.y + Math.sin(agent.direction) * agent.speed;
+    // Find the best neighbor in the current direction
+    let bestNeighbor: Position = neighbors[0]!;
+    let bestScore = -Infinity;
 
-    const newPos: Position = {
-      x: Math.round(newX),
-      y: Math.round(newY),
-      z: currentPos.z || 0,
-    };
+    for (const neighbor of neighbors) {
+      // Calculate angle to this neighbor
+      const dx = neighbor.x - currentPos.x;
+      const dy = neighbor.y - currentPos.y;
+      const angleToNeighbor = Math.atan2(dy, dx);
 
-    // Check if new position is valid
-    if (
-      this.isValidPosition(newPos) &&
-      this.maze!.canMove(currentPos, newPos)
-    ) {
-      agent.position = newPos;
-      agent.trail.push({ ...newPos });
+      // Calculate how aligned this neighbor is with our current direction
+      let angleDiff = angleToNeighbor - agent.direction;
+      // Normalize angle difference to [-PI, PI]
+      while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+      while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
 
-      // Deposit pheromone
-      this.depositPheromone(newPos);
+      const alignmentScore = Math.cos(angleDiff); // 1 when aligned, -1 when opposite
 
-      // Limit trail length to prevent memory issues
-      if (agent.trail.length > 100) {
-        agent.trail.shift();
+      // Get pheromone strength for this neighbor
+      const pheromone = this.pheromones.get(this.positionToString(neighbor));
+      const pheromoneScore = pheromone ? pheromone.strength : 0;
+
+      // Calculate distance to goal
+      const goalDx = this.goal!.x - neighbor.x;
+      const goalDy = this.goal!.y - neighbor.y;
+      const distanceToGoal = Math.sqrt(goalDx * goalDx + goalDy * goalDy);
+      const goalScore = 1 / (distanceToGoal + 1); // Closer is better
+
+      // Combine scores
+      const totalScore =
+        alignmentScore * 0.4 +
+        pheromoneScore * this.ATTRACTION_STRENGTH +
+        goalScore * 0.3 +
+        Math.random() * 0.2; // Add some randomness
+
+      if (totalScore > bestScore) {
+        bestScore = totalScore;
+        bestNeighbor = neighbor;
       }
-    } else {
-      // Hit a wall, change direction randomly
-      agent.direction += (Math.random() - 0.5) * Math.PI;
+    }
+
+    // Move to the best neighbor
+    agent.position = { x: bestNeighbor.x, y: bestNeighbor.y, z: bestNeighbor.z || 0 };
+    agent.trail.push({ x: bestNeighbor.x, y: bestNeighbor.y, z: bestNeighbor.z || 0 });
+
+    // Track explored positions
+    this.exploredPositions.add(this.positionToString(bestNeighbor));
+
+    // Deposit pheromone
+    this.depositPheromone(bestNeighbor);
+
+    // Update direction to point towards where we moved
+    const dx = bestNeighbor.x - currentPos.x;
+    const dy = bestNeighbor.y - currentPos.y;
+    if (dx !== 0 || dy !== 0) {
+      agent.direction = Math.atan2(dy, dx);
+    }
+
+    // Limit trail length to prevent memory issues
+    if (agent.trail.length > 100) {
+      agent.trail.shift();
     }
 
     // Deactivate agent if it's been exploring too long without progress
@@ -320,18 +370,6 @@ export class SlimeMoldSolver implements ISolver {
     }
 
     return path;
-  }
-
-  private isValidPosition(position: Position): boolean {
-    const dimensions = this.maze!.getDimensions();
-    return (
-      position.x >= 0 &&
-      position.x < dimensions.width &&
-      position.y >= 0 &&
-      position.y < dimensions.height &&
-      (position.z || 0) >= 0 &&
-      (position.z || 0) < dimensions.depth
-    );
   }
 
   private positionsEqual(pos1: Position, pos2: Position): boolean {

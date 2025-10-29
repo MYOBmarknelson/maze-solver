@@ -69,6 +69,7 @@ export class GreedyBestFirstSolver implements ISolver {
 
         // Greedy: only consider if not already in queue
         if (!this.priorityQueue.includes(neighborNode)) {
+          neighborNode.previous = currentNode.position; // Set previous for path reconstruction
           this.priorityQueue.push(neighborNode);
         }
       }
@@ -141,6 +142,7 @@ export class GreedyBestFirstSolver implements ISolver {
 
       // Greedy: only consider if not already in queue
       if (!this.priorityQueue.includes(neighborNode)) {
+        neighborNode.previous = currentNode.position; // Set previous for path reconstruction
         this.priorityQueue.push(neighborNode);
       }
     }
@@ -217,7 +219,10 @@ export class GreedyBestFirstSolver implements ISolver {
     if (!this.maze) return [];
     return this.maze
       .getNeighbors(pos)
-      .filter((neighbor) => this.maze!.canMove(pos, neighbor));
+      .filter(
+        (neighbor): neighbor is Position =>
+          neighbor !== undefined && this.maze!.canMove(pos, neighbor)
+      );
   }
 
   private reconstructPath(): Position[] {

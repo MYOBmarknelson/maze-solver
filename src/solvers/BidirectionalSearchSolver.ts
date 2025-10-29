@@ -257,7 +257,10 @@ export class BidirectionalSearchSolver implements ISolver {
   private getNeighbors(pos: Position): Position[] {
     if (!this.maze) return [];
     const allNeighbors = this.maze.getNeighbors(pos);
-    return allNeighbors.filter((neighbor) => this.maze!.canMove(pos, neighbor));
+    return allNeighbors.filter(
+      (neighbor): neighbor is Position =>
+        neighbor !== undefined && this.maze!.canMove(pos, neighbor)
+    );
   }
 
   getCurrentPath(): Position[] {
