@@ -41,10 +41,17 @@ export class MazeGenerator {
   }
 
   private generateMaze(): void {
-    // Use recursive backtracking algorithm
+    if (this.config.dimensions === "3d") {
+      this.generateMaze3D();
+    } else {
+      this.generateMaze2D();
+    }
+  }
+
+  private generateMaze2D(): void {
+    // Use recursive backtracking algorithm for 2D
     const stack: Position[] = [];
-    const startPosition: Position =
-      this.config.dimensions === "3d" ? { x: 0, y: 0, z: 0 } : { x: 0, y: 0 };
+    const startPosition: Position = { x: 0, y: 0 };
 
     this.maze.markVisited(startPosition, true);
     stack.push(startPosition);
@@ -71,11 +78,91 @@ export class MazeGenerator {
     }
   }
 
+  private generateMaze3D(): void {
+    // Generate each level separately, then add inter-level connections
+    const depth = this.config.size.depth || 1;
+
+    // Generate each level
+    for (let z = 0; z < depth; z++) {
+      this.generateLevel(z);
+    }
+
+    // Add connections between levels
+    this.addInterLevelConnections();
+  }
+
+  private generateLevel(z: number): void {
+    const stack: Position[] = [];
+    const startPosition: Position = { x: 0, y: 0, z };
+
+    // Only start if not already visited (in case of multiple starts)
+    if (!this.maze.isVisited(startPosition)) {
+      this.maze.markVisited(startPosition, true);
+      stack.push(startPosition);
+    }
+
+    while (stack.length > 0) {
+      const current = stack[stack.length - 1]!;
+      const neighbors = this.maze.getUnvisitedNeighbors(current).filter(
+        (pos) => pos.z === z // Only neighbors on the same level
+      );
+
+      if (neighbors.length > 0) {
+        // Choose a random unvisited neighbor on the same level
+        const randomIndex = Math.floor(Math.random() * neighbors.length);
+        const chosen = neighbors[randomIndex]!;
+
+        // Remove wall between current and chosen
+        this.removeWallBetween(current, chosen);
+
+        // Mark chosen as visited and push to stack
+        this.maze.markVisited(chosen, true);
+        stack.push(chosen);
+      } else {
+        // Backtrack
+        stack.pop();
+      }
+    }
+  }
+
+  private addInterLevelConnections(): void {
+    const dimensions = this.maze.getDimensions();
+    const depth = dimensions.depth;
+
+    // For each level except the last, add some connections to the next level
+    for (let z = 0; z < depth - 1; z++) {
+      // Add a few random connections between level z and z+1
+      const connectionsToAdd = Math.max(
+        1,
+        Math.floor((dimensions.width * dimensions.height) / 20)
+      ); // About 5% of cells
+
+      for (let i = 0; i < connectionsToAdd; i++) {
+        const x = Math.floor(Math.random() * dimensions.width);
+        const y = Math.floor(Math.random() * dimensions.height);
+
+        const pos1: Position = { x, y, z };
+        const pos2: Position = { x, y, z: z + 1 };
+
+        // Remove the up wall from pos1 and down wall from pos2
+        this.maze.setWall(pos1, "up", false);
+        this.maze.setWall(pos2, "down", false);
+      }
+    }
+  }
+
   private generateMazePrim(): void {
-    // Use Prim's algorithm
+    if (this.config.dimensions === "3d") {
+      this.generateMazePrim3D();
+    } else {
+      this.generateMazePrim2D();
+    }
+  }
+
+  private generateMazePrim2D(): void {
+    // Use Prim's algorithm for 2D
     const frontiers: Position[] = [];
-    const startPosition: Position =
-      this.config.dimensions === "3d" ? { x: 0, y: 0, z: 0 } : { x: 0, y: 0 };
+    const startPosition: Position = { x: 0, y: 0 };
 
     // Start with the initial cell
     this.maze.markVisited(startPosition, true);
@@ -123,33 +210,107 @@ export class MazeGenerator {
     }
   }
 
+  private generateMazePrim3D(): void {
+    const depth = this.config.size.depth || 1;
+
+    // Generate each level separately
+    for (let z = 0; z < depth; z++) {
+      this.generateLevelPrim(z);
+    }
+
+    // Add connections between levels
+    this.addInterLevelConnections();
+  }
+
+  private generateLevelPrim(z: number): void {
+    const frontiers: Position[] = [];
+    const startPosition: Position = { x: 0, y: 0, z };
+
+    // Start with the initial cell if not already visited
+    if (!this.maze.isVisited(startPosition)) {
+      this.maze.markVisited(startPosition, true);
+
+      // Add neighbors of start to frontiers (only same level)
+      const startNeighbors = this.maze
+        .getNeighbors(startPosition)
+        .filter((pos) => pos.z === z);
+      frontiers.push(...startNeighbors);
+    }
+
+    while (frontiers.length > 0) {
+      // Choose a random frontier cell
+      const randomIndex = Math.floor(Math.random() * frontiers.length);
+      const current = frontiers[randomIndex]!;
+
+      // Remove from frontiers
+      frontiers.splice(randomIndex, 1);
+
+      // Skip if already visited
+      if (this.maze.isVisited(current)) continue;
+
+      // Find visited neighbors on the same level
+      const neighbors = this.maze
+        .getNeighbors(current)
+        .filter((pos) => pos.z === z);
+      const visitedNeighbors = neighbors.filter((neighbor) =>
+        this.maze.isVisited(neighbor)
+      );
+
+      if (visitedNeighbors.length > 0) {
+        // Choose a random visited neighbor to connect to
+        const connectTo =
+          visitedNeighbors[
+            Math.floor(Math.random() * visitedNeighbors.length)
+          ]!;
+
+        // Remove wall between current and chosen neighbor
+        this.removeWallBetween(current, connectTo);
+
+        // Mark current as visited
+        this.maze.markVisited(current, true);
+
+        // Add unvisited neighbors of current to frontiers (only same level)
+        const unvisitedNeighbors = this.maze
+          .getNeighbors(current)
+          .filter(
+            (neighbor) => !this.maze.isVisited(neighbor) && neighbor.z === z
+          );
+        frontiers.push(...unvisitedNeighbors);
+      }
+    }
+  }
+
   private generateLabyrinth(): void {
-    // Generate a single continuous path
+    if (this.config.dimensions === "3d") {
+      this.generateLabyrinth3D();
+    } else {
+      this.generateLabyrinth2D();
+    }
+  }
+
+  private generateLabyrinth2D(): void {
+    // Generate a single continuous path for 2D
     const dimensions = this.maze.getDimensions();
-    const totalCells = dimensions.width * dimensions.height * dimensions.depth;
+    const totalCells = dimensions.width * dimensions.height;
 
     // Create a spiral pattern for the labyrinth
     const path: Position[] = [];
     let x = 0,
-      y = 0,
-      z = 0;
+      y = 0;
     let dx = 1,
-      dy = 0,
-      dz = 0;
+      dy = 0;
     let stepsInDirection = dimensions.width;
     let stepsTaken = 0;
     let directionChanges = 0;
 
     for (let i = 0; i < totalCells; i++) {
-      const position: Position =
-        this.config.dimensions === "3d" ? { x, y, z } : { x, y };
+      const position: Position = { x, y };
 
       path.push(position);
 
       // Move to next position
       x += dx;
       y += dy;
-      z += dz;
       stepsTaken++;
 
       // Change direction when needed
@@ -184,7 +345,83 @@ export class MazeGenerator {
       // Stay within bounds
       x = Math.max(0, Math.min(x, dimensions.width - 1));
       y = Math.max(0, Math.min(y, dimensions.height - 1));
-      z = Math.max(0, Math.min(z, dimensions.depth - 1));
+    }
+
+    // Remove walls along the path
+    for (let i = 0; i < path.length - 1; i++) {
+      this.removeWallBetween(path[i]!, path[i + 1]!);
+    }
+  }
+
+  private generateLabyrinth3D(): void {
+    const dimensions = this.maze.getDimensions();
+    const depth = dimensions.depth;
+
+    // Generate a labyrinth for each level
+    for (let z = 0; z < depth; z++) {
+      this.generateLabyrinthLevel(z);
+    }
+
+    // Add connections between levels
+    this.addInterLevelConnections();
+  }
+
+  private generateLabyrinthLevel(z: number): void {
+    const dimensions = this.maze.getDimensions();
+    const totalCells = dimensions.width * dimensions.height;
+
+    // Create a spiral pattern for the labyrinth on this level
+    const path: Position[] = [];
+    let x = 0,
+      y = 0;
+    let dx = 1,
+      dy = 0;
+    let stepsInDirection = dimensions.width;
+    let stepsTaken = 0;
+    let directionChanges = 0;
+
+    for (let i = 0; i < totalCells; i++) {
+      const position: Position = { x, y, z };
+
+      path.push(position);
+
+      // Move to next position
+      x += dx;
+      y += dy;
+      stepsTaken++;
+
+      // Change direction when needed
+      if (stepsTaken >= stepsInDirection) {
+        stepsTaken = 0;
+        directionChanges++;
+
+        // Change direction (right turn for spiral)
+        if (dx === 1) {
+          dx = 0;
+          dy = 1;
+        } // right -> down
+        else if (dy === 1) {
+          dx = -1;
+          dy = 0;
+        } // down -> left
+        else if (dx === -1) {
+          dx = 0;
+          dy = -1;
+        } // left -> up
+        else if (dy === -1) {
+          dx = 1;
+          dy = 0;
+        } // up -> right
+
+        // Adjust steps for next direction
+        if (directionChanges % 2 === 0) {
+          stepsInDirection--;
+        }
+      }
+
+      // Stay within bounds
+      x = Math.max(0, Math.min(x, dimensions.width - 1));
+      y = Math.max(0, Math.min(y, dimensions.height - 1));
     }
 
     // Remove walls along the path

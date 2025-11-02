@@ -168,6 +168,9 @@ export class ThreeRenderer implements IRenderer {
     this.buildLinkGeometry();
     this.updatePaths(currentPath, solutionPath);
 
+    // Initialize layer visibility - show only the first layer by default
+    this.layerManager.setActiveLayer(0);
+
     // Position camera to center on maze
     this.positionCameraForMaze();
 
@@ -176,6 +179,10 @@ export class ThreeRenderer implements IRenderer {
 
   public setLayerOpacity(layer: number, opacity: number): void {
     this.layerManager.setLayerOpacity(layer, opacity);
+  }
+
+  public setActiveLayer(layer: number): void {
+    this.layerManager.setActiveLayer(layer);
   }
 
   public setCameraPosition(position: Position): void {
@@ -285,6 +292,7 @@ export class ThreeRenderer implements IRenderer {
       floorMesh.rotation.x = -Math.PI / 2;
       floorMesh.position.set(worldX + cellSize / 2, 0, worldZ + cellSize / 2);
       this.floor.add(floorMesh);
+      this.layerManager.addObjectToLayer(z, floorMesh);
 
       // Create walls (skip walls for entry/exit doors)
       if (
@@ -300,6 +308,7 @@ export class ThreeRenderer implements IRenderer {
         const wallMesh = new THREE.Mesh(wallGeometry, this.wallMaterial);
         wallMesh.position.set(worldX + cellSize / 2, wallHeight / 2, worldZ);
         this.walls.add(wallMesh);
+        this.layerManager.addObjectToLayer(z, wallMesh);
       }
 
       if (
@@ -319,6 +328,7 @@ export class ThreeRenderer implements IRenderer {
           worldZ + cellSize
         );
         this.walls.add(wallMesh);
+        this.layerManager.addObjectToLayer(z, wallMesh);
       }
 
       if (
@@ -338,6 +348,7 @@ export class ThreeRenderer implements IRenderer {
           worldZ + cellSize / 2
         );
         this.walls.add(wallMesh);
+        this.layerManager.addObjectToLayer(z, wallMesh);
       }
 
       if (
@@ -353,6 +364,7 @@ export class ThreeRenderer implements IRenderer {
         const wallMesh = new THREE.Mesh(wallGeometry, this.wallMaterial);
         wallMesh.position.set(worldX, wallHeight / 2, worldZ + cellSize / 2);
         this.walls.add(wallMesh);
+        this.layerManager.addObjectToLayer(z, wallMesh);
       }
 
       // 3D walls
@@ -370,6 +382,7 @@ export class ThreeRenderer implements IRenderer {
             worldZ + cellSize / 2
           );
           this.walls.add(wallMesh);
+          this.layerManager.addObjectToLayer(z, wallMesh);
         }
 
         if (cell.walls.down && z > 0) {
@@ -385,6 +398,7 @@ export class ThreeRenderer implements IRenderer {
             worldZ + cellSize / 2
           );
           this.walls.add(wallMesh);
+          this.layerManager.addObjectToLayer(z, wallMesh);
         }
       }
     }
@@ -407,12 +421,14 @@ export class ThreeRenderer implements IRenderer {
     const entryMarker = new THREE.Mesh(entryGeometry, this.entryMaterial);
     entryMarker.position.set(entryPos.x + 0.5, markerHeight, entryPos.y + 0.5);
     this.entryExitMarkers.add(entryMarker);
+    this.layerManager.addObjectToLayer(entryPos.z || 0, entryMarker);
 
     // Exit marker (red sphere)
     const exitGeometry = new THREE.SphereGeometry(markerRadius, 16, 16);
     const exitMarker = new THREE.Mesh(exitGeometry, this.exitMaterial);
     exitMarker.position.set(exitPos.x + 0.5, markerHeight, exitPos.y + 0.5);
     this.entryExitMarkers.add(exitMarker);
+    this.layerManager.addObjectToLayer(exitPos.z || 0, exitMarker);
 
     // Add glowing effects
     const entryGlowGeometry = new THREE.SphereGeometry(
@@ -428,6 +444,7 @@ export class ThreeRenderer implements IRenderer {
     const entryGlow = new THREE.Mesh(entryGlowGeometry, entryGlowMaterial);
     entryGlow.position.copy(entryMarker.position);
     this.entryExitMarkers.add(entryGlow);
+    this.layerManager.addObjectToLayer(entryPos.z || 0, entryGlow);
 
     const exitGlowGeometry = new THREE.SphereGeometry(
       markerRadius * 1.2,
@@ -442,6 +459,7 @@ export class ThreeRenderer implements IRenderer {
     const exitGlow = new THREE.Mesh(exitGlowGeometry, exitGlowMaterial);
     exitGlow.position.copy(exitMarker.position);
     this.entryExitMarkers.add(exitGlow);
+    this.layerManager.addObjectToLayer(exitPos.z || 0, exitGlow);
   }
 
   private buildLinkGeometry(): void {
@@ -491,6 +509,7 @@ export class ThreeRenderer implements IRenderer {
         linkMesh.lookAt(endX, endY, endZ);
 
         this.links.add(linkMesh);
+        this.layerManager.addObjectToLayer(cell.position.z || 0, linkMesh);
 
         // Add glowing spheres at connection points
         const sphereGeometry = new THREE.SphereGeometry(0.1, 8, 8);
@@ -503,10 +522,12 @@ export class ThreeRenderer implements IRenderer {
         const startSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
         startSphere.position.set(startX, startY, startZ);
         this.links.add(startSphere);
+        this.layerManager.addObjectToLayer(cell.position.z || 0, startSphere);
 
         const endSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
         endSphere.position.set(endX, endY, endZ);
         this.links.add(endSphere);
+        this.layerManager.addObjectToLayer(linkPos.z || 0, endSphere);
       }
     }
 
@@ -568,6 +589,7 @@ export class ThreeRenderer implements IRenderer {
       );
       sphere.position.set(worldX, worldY, worldZ);
       group.add(sphere);
+      this.layerManager.addObjectToLayer(position.z || 0, sphere);
     }
   }
 
@@ -595,6 +617,9 @@ export class ThreeRenderer implements IRenderer {
 
     const line = new THREE.Line(lineGeometry, lineMaterial);
     this.solutionPath.add(line);
+    // Lines span multiple layers, so we'll add to all relevant layers
+    const layers = new Set(path.map((p) => p.z || 0));
+    layers.forEach((layer) => this.layerManager.addObjectToLayer(layer, line));
 
     // Add spheres at key points for visibility
     const sphereGeometry = new THREE.SphereGeometry(0.12);
@@ -613,6 +638,7 @@ export class ThreeRenderer implements IRenderer {
       const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
       sphere.position.set(worldX, worldY, worldZ);
       this.solutionPath.add(sphere);
+      this.layerManager.addObjectToLayer(position.z || 0, sphere);
     }
   }
 
@@ -753,19 +779,39 @@ class CameraController implements ICamera {
 }
 
 class LayerManager implements ILayerManager {
-  private _scene: THREE.Scene;
   private layerObjects: Map<number, THREE.Object3D[]> = new Map();
   private activeLayer: number = 0;
+  private layerOpacity: number = 1.0;
 
   constructor(scene: THREE.Scene) {
-    this._scene = scene;
-    // Suppress unused variable warning - will be used in full implementation
-    void this._scene;
+    // Scene reference not needed for current implementation
+    void scene;
   }
 
   setActiveLayer(layer: number): void {
+    // Hide all layers first
+    for (const objects of this.layerObjects.values()) {
+      objects.forEach((obj) => {
+        obj.visible = false;
+      });
+    }
+
+    // Show only the active layer
     this.activeLayer = layer;
-    this.updateLayerVisibility();
+    const activeObjects = this.layerObjects.get(layer);
+    if (activeObjects) {
+      activeObjects.forEach((obj) => {
+        obj.visible = true;
+        // Apply current opacity setting
+        if (
+          obj instanceof THREE.Mesh &&
+          obj.material instanceof THREE.Material
+        ) {
+          obj.material.transparent = this.layerOpacity < 1;
+          obj.material.opacity = this.layerOpacity;
+        }
+      });
+    }
   }
 
   setLayerVisibility(layer: number, visible: boolean): void {
@@ -778,6 +824,7 @@ class LayerManager implements ILayerManager {
   }
 
   setLayerOpacity(layer: number, opacity: number): void {
+    this.layerOpacity = opacity;
     const objects = this.layerObjects.get(layer);
     if (objects) {
       objects.forEach((obj) => {
@@ -792,20 +839,18 @@ class LayerManager implements ILayerManager {
     }
   }
 
+  addObjectToLayer(layer: number, object: THREE.Object3D): void {
+    if (!this.layerObjects.has(layer)) {
+      this.layerObjects.set(layer, []);
+    }
+    this.layerObjects.get(layer)!.push(object);
+  }
+
   getActiveLayer(): number {
     return this.activeLayer;
   }
 
   getLayerCount(): number {
     return this.layerObjects.size;
-  }
-
-  private updateLayerVisibility(): void {
-    // TODO: Implement layer visibility logic
-    // Show active layer opaque, others semi-transparent
-    for (const layer of this.layerObjects.keys()) {
-      const opacity = layer === this.activeLayer ? 1.0 : 0.3;
-      this.setLayerOpacity(layer, opacity);
-    }
   }
 }

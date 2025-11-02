@@ -87,6 +87,7 @@ export interface IRenderer {
     solutionPath?: Position[]
   ): void;
   setLayerOpacity(layer: number, opacity: number): void;
+  setActiveLayer(layer: number): void;
   setCameraPosition(position: Position): void;
   dispose(): void;
 }
@@ -107,6 +108,7 @@ export interface ILayerManager {
   setActiveLayer(layer: number): void;
   setLayerVisibility(layer: number, visible: boolean): void;
   setLayerOpacity(layer: number, opacity: number): void;
+  addObjectToLayer(layer: number, object: any): void;
   getActiveLayer(): number;
   getLayerCount(): number;
 }

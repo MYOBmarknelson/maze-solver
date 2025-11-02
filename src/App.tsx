@@ -1205,10 +1205,7 @@ const App: React.FC = () => {
                             },
                           }));
                           if (rendererRef.current) {
-                            rendererRef.current.setLayerOpacity(
-                              layer,
-                              appState.renderConfig.layerOpacity
-                            );
+                            rendererRef.current.setActiveLayer(layer);
                           }
                         }}
                       />
