@@ -62,9 +62,12 @@ const App: React.FC = () => {
   const rendererRef = useRef<ThreeRenderer | null>(null);
   const [isRendererReady, setIsRendererReady] = useState(false);
 
-  // Accordion state for sidebar panels
+  // Detect if mobile device
+  const isMobile = window.innerWidth <= 768;
+
+  // Accordion state for sidebar panels - collapse on mobile by default
   const [expandedPanels, setExpandedPanels] = useState({
-    mazeConfig: true, // Keep maze config open by default
+    mazeConfig: !isMobile, // Collapsed on mobile, open on desktop
     solverControls: false,
     actions: false,
     solverSelection: false,

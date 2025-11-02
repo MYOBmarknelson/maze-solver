@@ -104,14 +104,31 @@ export class ThreeRenderer implements IRenderer {
   public initialize(container: HTMLElement): void {
     this.container = container;
 
-    // Get container dimensions
-    const rect = container.getBoundingClientRect();
-    const width = Math.max(rect.width || 400, 400);
-    const height = Math.max(rect.height || 400, 400);
+    // Get container dimensions with a small delay to ensure layout is complete
+    setTimeout(() => {
+      const rect = container.getBoundingClientRect();
+      const width = Math.max(rect.width || 400, 100);
+      const height = Math.max(rect.height || 400, 100);
 
-    this.renderer.setSize(width, height);
-    this.renderer.setClearColor(0x2c3e50); // Dark blue-gray background
-    container.appendChild(this.renderer.domElement);
+      this.renderer.setSize(width, height);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Optimize for mobile
+      this.renderer.setClearColor(0x2c3e50); // Dark blue-gray background
+      container.appendChild(this.renderer.domElement);
+
+      // Update camera aspect ratio
+      this.camera.aspect = width / height;
+      this.camera.updateProjectionMatrix();
+
+      console.log(
+        "ThreeRenderer initialized with size:",
+        width,
+        height,
+        "rect:",
+        rect,
+        "pixelRatio:",
+        window.devicePixelRatio
+      );
+    }, 100);
 
     // Handle window resize
     window.addEventListener("resize", () => this.onWindowResize());
@@ -120,17 +137,14 @@ export class ThreeRenderer implements IRenderer {
     const resizeObserver = new ResizeObserver(() => this.onContainerResize());
     resizeObserver.observe(container);
 
+    // Handle orientation change on mobile
+    window.addEventListener("orientationchange", () => {
+      setTimeout(() => this.onWindowResize(), 100);
+    });
+
     // Set initial camera position
     this.camera.position.set(10, 10, 10);
     this.camera.lookAt(0, 0, 0);
-
-    console.log(
-      "ThreeRenderer initialized with size:",
-      width,
-      height,
-      "rect:",
-      rect
-    );
   }
 
   public render(
@@ -632,14 +646,15 @@ export class ThreeRenderer implements IRenderer {
     if (!this.container) return;
 
     const rect = this.container.getBoundingClientRect();
-    const width = Math.max(rect.width || 400, 400);
-    const height = Math.max(rect.height || 400, 400);
+    const width = Math.max(rect.width || 100, 100);
+    const height = Math.max(rect.height || 100, 100);
 
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    console.log("Resized to:", width, height);
+    console.log("Resized to:", width, height, "aspect:", this.camera.aspect);
   }
 
   private onContainerResize(): void {
